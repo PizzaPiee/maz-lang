@@ -25,10 +25,22 @@ func (l *Lexer) NextToken() token.Token {
 	switch l.char {
 	case 0:
 		res = newToken(token.EOF, "")
+	case '!':
+		if l.peekChar() == '=' {
+			res = newToken(token.NEQ, string(l.char)+string(l.peekChar()))
+			l.readChar()
+		} else {
+			res = newToken(token.BANG, string(l.char))
+		}
 	case '+':
 		res = newToken(token.PLUS, string(l.char))
 	case '=':
-		res = newToken(token.ASSIGN, string(l.char))
+		if l.peekChar() == '=' {
+			res = newToken(token.EQ, string(l.char)+string(l.peekChar()))
+			l.readChar()
+		} else {
+			res = newToken(token.ASSIGN, string(l.char))
+		}
 	case ';':
 		res = newToken(token.SEMICOLON, string(l.char))
 	case ',':
@@ -41,15 +53,34 @@ func (l *Lexer) NextToken() token.Token {
 		res = newToken(token.LBRACE, string(l.char))
 	case '}':
 		res = newToken(token.RBRACE, string(l.char))
+	case '>':
+		if l.peekChar() == '=' {
+			res = newToken(token.GTEQ, string(l.char)+string(l.peekChar()))
+			l.readChar()
+		} else {
+			res = newToken(token.GT, string(l.char))
+		}
+	case '<':
+		if l.peekChar() == '=' {
+			res = newToken(token.LTEQ, string(l.char)+string(l.peekChar()))
+			l.readChar()
+		} else {
+			res = newToken(token.LT, string(l.char))
+		}
 	default:
 		// Check if it is a digit
 		if isDigit(l.char) {
-			res = newToken(token.INT, l.readNumber())
+			return newToken(token.INT, l.readNumber())
 		} else {
 			// Check if it is an identifier or keyword
 			word := l.readWord()
-			res = newToken(token.IDENT, word)
+			keyword := token.Lookupkeyword(word)
 
+			if keyword != "" {
+				return newToken(keyword, word)
+			} else {
+				return newToken(token.IDENT, word)
+			}
 		}
 	}
 
