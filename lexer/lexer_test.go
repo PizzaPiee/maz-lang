@@ -7,7 +7,7 @@ import (
 
 func TestNextToken(t *testing.T) {
 	input := `
-	+=;,(){}
+	+-*/=;,(){}
 	10 1
 	a foo fizz_buzz
 	let a = 10;
@@ -30,6 +30,9 @@ func TestNextToken(t *testing.T) {
 		ExpectedLiteral string
 	}{
 		{ExpectedType: token.PLUS, ExpectedLiteral: "+"},
+		{ExpectedType: token.MINUS, ExpectedLiteral: "-"},
+		{ExpectedType: token.ASTERISK, ExpectedLiteral: "*"},
+		{ExpectedType: token.SLASH, ExpectedLiteral: "/"},
 		{ExpectedType: token.ASSIGN, ExpectedLiteral: "="},
 		{ExpectedType: token.SEMICOLON, ExpectedLiteral: ";"},
 		{ExpectedType: token.COMMA, ExpectedLiteral: ","},
