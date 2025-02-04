@@ -11,7 +11,7 @@ import (
 func Run() {
 	reader := bufio.NewReader(os.Stdin)
 
-	fmt.Println("Welcome to the Maz REPL")
+	fmt.Println("Welcome to the Maz REPL!")
 	for {
 		fmt.Print(">> ")
 		input, _ := reader.ReadString('\n')
