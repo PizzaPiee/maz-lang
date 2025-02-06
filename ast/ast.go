@@ -26,9 +26,21 @@ func (p *Program) String() string {
 
 type PrefixExpression struct {
 	Prefix token.Token
-	Value  token.Token
+	Value  Node
 }
 
 func (pe *PrefixExpression) String() string {
-	return fmt.Sprintf("(%s%s)", pe.Prefix.Literal, pe.Value.Literal)
+	return fmt.Sprintf("(%s%s)", pe.Prefix.Literal, pe.Value.String())
 }
+
+type IntegerLiteral struct {
+	Value int64
+}
+
+func (il *IntegerLiteral) String() string { return fmt.Sprintf("%d", il.Value) }
+
+type BooleanLiteral struct {
+	Value bool
+}
+
+func (bl *BooleanLiteral) String() string { return fmt.Sprintf("%v", bl.Value) }

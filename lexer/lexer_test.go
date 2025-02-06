@@ -23,6 +23,7 @@ func TestNextToken(t *testing.T) {
 	3 > 1
 	2 >= 1
 	3 <= 1
+	true false
 	`
 
 	tests := []struct {
@@ -95,6 +96,8 @@ func TestNextToken(t *testing.T) {
 		{ExpectedType: token.INT, ExpectedLiteral: "3"},
 		{ExpectedType: token.LTEQ, ExpectedLiteral: "<="},
 		{ExpectedType: token.INT, ExpectedLiteral: "1"},
+		{ExpectedType: token.TRUE, ExpectedLiteral: "true"},
+		{ExpectedType: token.FALSE, ExpectedLiteral: "false"},
 	}
 
 	l := New(input)

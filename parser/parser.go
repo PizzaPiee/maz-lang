@@ -4,6 +4,7 @@ import (
 	"maz-lang/ast"
 	"maz-lang/lexer"
 	"maz-lang/token"
+	"strconv"
 )
 
 type Parser struct {
@@ -22,6 +23,9 @@ func New(lexer *lexer.Lexer) *Parser {
 
 	p.registerPrefixFn(token.BANG, p.parsePrefixExpression)
 	p.registerPrefixFn(token.MINUS, p.parsePrefixExpression)
+	p.registerPrefixFn(token.INT, p.parseIntegerLiteral)
+	p.registerPrefixFn(token.TRUE, p.parseBooleanLiteral)
+	p.registerPrefixFn(token.FALSE, p.parseBooleanLiteral)
 
 	p.nextToken()
 	p.nextToken()
@@ -54,11 +58,35 @@ func (p *Parser) nextToken() {
 	p.peekToken = p.lexer.NextToken()
 }
 
+func (p *Parser) parseExpression() ast.Node {
+	tok := p.curToken
+	prefixFn := p.prefixFns[tok.Type]
+	exp := prefixFn()
+
+	return exp
+}
+
 func (p *Parser) parsePrefixExpression() ast.Node {
 	prefix := p.curToken
 	p.nextToken()
-	value := p.curToken
-	result := ast.PrefixExpression{Prefix: prefix, Value: value}
+	expression := p.parseExpression()
+	node := ast.PrefixExpression{Prefix: prefix, Value: expression}
 
-	return &result
+	return &node
+}
+
+func (p *Parser) parseIntegerLiteral() ast.Node {
+	// FIX: handle the case where the literal value cannot be converted
+	num, _ := strconv.Atoi(p.curToken.Literal)
+	node := ast.IntegerLiteral{Value: int64(num)}
+
+	return &node
+}
+
+func (p *Parser) parseBooleanLiteral() ast.Node {
+	// FIX: use an else if and return error
+	if p.curToken.Type == token.TRUE {
+		return &ast.BooleanLiteral{Value: true}
+	}
+	return &ast.BooleanLiteral{Value: false}
 }
