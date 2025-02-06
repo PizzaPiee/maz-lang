@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"fmt"
 	"maz-lang/lexer"
+	"maz-lang/parser"
 	"maz-lang/token"
 	"os"
 )
@@ -17,8 +18,9 @@ func Run() {
 		input, _ := reader.ReadString('\n')
 
 		l := lexer.New(input)
-		tokens := getTokens(&l)
-		fmt.Printf("%+v\n", tokens)
+		p := parser.New(&l)
+		program := p.Parse()
+		fmt.Printf("%s\n", program.String())
 	}
 }
 
@@ -27,7 +29,7 @@ func getTokens(l *lexer.Lexer) []token.Token {
 
 	for {
 		tok := l.NextToken()
-		if tok.Type == token.EOF {
+		if tok.Type == token.EOF || tok.Type == token.ILLEGAL {
 			return res
 		}
 		res = append(res, tok)

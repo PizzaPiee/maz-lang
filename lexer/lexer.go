@@ -77,16 +77,17 @@ func (l *Lexer) NextToken() token.Token {
 		// Check if it is a digit
 		if isDigit(l.char) {
 			return newToken(token.INT, l.readNumber())
-		} else {
-			// Check if it is an identifier or keyword
-			word := l.readWord()
-			keyword := token.Lookupkeyword(word)
+		}
+		// Check if it is an identifier or keyword
+		word := l.readWord()
+		keyword := token.Lookupkeyword(word)
 
-			if keyword != "" {
-				return newToken(keyword, word)
-			} else {
-				return newToken(token.IDENT, word)
-			}
+		if keyword != "" {
+			return newToken(keyword, word)
+		} else if word != "" {
+			return newToken(token.IDENT, word)
+		} else {
+			return newToken(token.ILLEGAL, string(l.char))
 		}
 	}
 
