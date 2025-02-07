@@ -28,6 +28,13 @@ func TestParsePrefixExpression(t *testing.T) {
 				Value:  &ast.BooleanLiteral{Value: true},
 			},
 		},
+		{
+			Expression: "!false",
+			ExpectedNode: ast.PrefixExpression{
+				Prefix: token.Token{Type: token.BANG, Literal: "!"},
+				Value:  &ast.BooleanLiteral{Value: false},
+			},
+		},
 	}
 
 	for _, tt := range tests {

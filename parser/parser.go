@@ -79,7 +79,7 @@ func (p *Parser) Parse() ast.Program {
 		if tok.Type == token.EOF || tok.Type == token.ILLEGAL {
 			return program
 		}
-		// prefixFn := p.prefixFns[tok.Type]
+
 		node := p.parseExpression()
 		program.Statements = append(program.Statements, node)
 		p.nextToken()
@@ -107,7 +107,7 @@ func (p *Parser) parseExpression() ast.Node {
 		p.nextToken()
 		infixFn, ok := p.infixFns[p.curToken.Type]
 		if !ok {
-			// TODO: return error if not function is found
+			// TODO: return error if no function is found
 			break
 		}
 
