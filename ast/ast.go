@@ -33,6 +33,16 @@ func (pe *PrefixExpression) String() string {
 	return fmt.Sprintf("(%s%s)", pe.Prefix.Literal, pe.Value.String())
 }
 
+type InfixExpression struct {
+	Left     Node
+	Operator token.Token
+	Right    Node
+}
+
+func (ie *InfixExpression) String() string {
+	return fmt.Sprintf("(%s %s %s)", ie.Left.String(), ie.Operator.Literal, ie.Right.String())
+}
+
 type IntegerLiteral struct {
 	Value int64
 }

@@ -18,14 +18,14 @@ func TestParsePrefixExpression(t *testing.T) {
 			Expression: "-5",
 			ExpectedNode: ast.PrefixExpression{
 				Prefix: token.Token{Type: token.MINUS, Literal: "-"},
-				Value:  token.Token{Type: token.INT, Literal: "5"},
+				Value:  &ast.IntegerLiteral{Value: int64(5)},
 			},
 		},
 		{
 			Expression: "!true",
 			ExpectedNode: ast.PrefixExpression{
 				Prefix: token.Token{Type: token.BANG, Literal: "!"},
-				Value:  token.Token{Type: token.TRUE, Literal: "true"},
+				Value:  &ast.BooleanLiteral{Value: true},
 			},
 		},
 	}

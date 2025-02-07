@@ -7,25 +7,55 @@ import (
 	"strconv"
 )
 
+const (
+	_ = iota
+	LOWEST
+	PLUS
+	PRODUCT
+	IDENT
+)
+
+var precedences = map[token.TokenType]int{
+	token.PLUS:     PLUS,
+	token.MINUS:    PLUS,
+	token.ASTERISK: PRODUCT,
+	token.SLASH:    PRODUCT,
+	token.IDENT:    IDENT,
+}
+
 type Parser struct {
 	lexer *lexer.Lexer
 
 	curToken  token.Token
 	peekToken token.Token
 
+	curPrecedence  int
+	peekPrecedence int
+
 	prefixFns map[token.TokenType]PrefixFn
+	infixFns  map[token.TokenType]InfixFn
 }
 
 type PrefixFn func() ast.Node
+type InfixFn func(left ast.Node) ast.Node
 
 func New(lexer *lexer.Lexer) *Parser {
-	p := &Parser{lexer: lexer, prefixFns: make(map[token.TokenType]PrefixFn)}
+	p := &Parser{
+		lexer:     lexer,
+		prefixFns: make(map[token.TokenType]PrefixFn),
+		infixFns:  make(map[token.TokenType]InfixFn),
+	}
 
 	p.registerPrefixFn(token.BANG, p.parsePrefixExpression)
 	p.registerPrefixFn(token.MINUS, p.parsePrefixExpression)
 	p.registerPrefixFn(token.INT, p.parseIntegerLiteral)
 	p.registerPrefixFn(token.TRUE, p.parseBooleanLiteral)
 	p.registerPrefixFn(token.FALSE, p.parseBooleanLiteral)
+
+	p.registerInfixFn(token.PLUS, p.parseInfixExpression)
+	p.registerInfixFn(token.MINUS, p.parseInfixExpression)
+	p.registerInfixFn(token.ASTERISK, p.parseInfixExpression)
+	p.registerInfixFn(token.SLASH, p.parseInfixExpression)
 
 	p.nextToken()
 	p.nextToken()
@@ -37,6 +67,10 @@ func (p *Parser) registerPrefixFn(key token.TokenType, fn PrefixFn) {
 	p.prefixFns[key] = fn
 }
 
+func (p *Parser) registerInfixFn(key token.TokenType, fn InfixFn) {
+	p.infixFns[key] = fn
+}
+
 func (p *Parser) Parse() ast.Program {
 	var program ast.Program
 
@@ -45,10 +79,9 @@ func (p *Parser) Parse() ast.Program {
 		if tok.Type == token.EOF || tok.Type == token.ILLEGAL {
 			return program
 		}
-		prefixFn := p.prefixFns[tok.Type]
-		node := prefixFn()
+		// prefixFn := p.prefixFns[tok.Type]
+		node := p.parseExpression()
 		program.Statements = append(program.Statements, node)
-
 		p.nextToken()
 	}
 }
@@ -56,14 +89,32 @@ func (p *Parser) Parse() ast.Program {
 func (p *Parser) nextToken() {
 	p.curToken = p.peekToken
 	p.peekToken = p.lexer.NextToken()
+
+	p.curPrecedence = precedences[p.curToken.Type]
+	p.peekPrecedence = precedences[p.peekToken.Type]
 }
 
 func (p *Parser) parseExpression() ast.Node {
 	tok := p.curToken
-	prefixFn := p.prefixFns[tok.Type]
-	exp := prefixFn()
+	prefixFn, ok := p.prefixFns[tok.Type]
+	if !ok {
+		// TODO: return error if no function is found
+		return nil
+	}
 
-	return exp
+	left := prefixFn()
+	for p.curPrecedence < p.peekPrecedence {
+		p.nextToken()
+		infixFn, ok := p.infixFns[p.curToken.Type]
+		if !ok {
+			// TODO: return error if not function is found
+			break
+		}
+
+		left = infixFn(left)
+	}
+
+	return left
 }
 
 func (p *Parser) parsePrefixExpression() ast.Node {
@@ -71,6 +122,14 @@ func (p *Parser) parsePrefixExpression() ast.Node {
 	p.nextToken()
 	expression := p.parseExpression()
 	node := ast.PrefixExpression{Prefix: prefix, Value: expression}
+
+	return &node
+}
+
+func (p *Parser) parseInfixExpression(left ast.Node) ast.Node {
+	node := ast.InfixExpression{Left: left, Operator: p.curToken}
+	p.nextToken()
+	node.Right = p.parseExpression()
 
 	return &node
 }
