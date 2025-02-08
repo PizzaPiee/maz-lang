@@ -12,6 +12,8 @@ const (
 	LOWEST
 	PLUS
 	PRODUCT
+	PREFIX
+	PAREN
 	IDENT
 )
 
@@ -20,6 +22,8 @@ var precedences = map[token.TokenType]int{
 	token.MINUS:    PLUS,
 	token.ASTERISK: PRODUCT,
 	token.SLASH:    PRODUCT,
+	token.LPAREN:   PAREN,
+	token.RPAREN:   PAREN,
 	token.IDENT:    IDENT,
 }
 
@@ -44,6 +48,8 @@ func New(lexer *lexer.Lexer) *Parser {
 		lexer:     lexer,
 		prefixFns: make(map[token.TokenType]PrefixFn),
 		infixFns:  make(map[token.TokenType]InfixFn),
+
+		curPrecedence: LOWEST,
 	}
 
 	p.registerPrefixFn(token.BANG, p.parsePrefixExpression)
@@ -51,6 +57,7 @@ func New(lexer *lexer.Lexer) *Parser {
 	p.registerPrefixFn(token.INT, p.parseIntegerLiteral)
 	p.registerPrefixFn(token.TRUE, p.parseBooleanLiteral)
 	p.registerPrefixFn(token.FALSE, p.parseBooleanLiteral)
+	p.registerPrefixFn(token.LPAREN, p.parseParenExpression)
 
 	p.registerInfixFn(token.PLUS, p.parseInfixExpression)
 	p.registerInfixFn(token.MINUS, p.parseInfixExpression)
@@ -80,7 +87,7 @@ func (p *Parser) Parse() ast.Program {
 			return program
 		}
 
-		node := p.parseExpression()
+		node := p.parseExpression(LOWEST)
 		program.Statements = append(program.Statements, node)
 		p.nextToken()
 	}
@@ -94,7 +101,7 @@ func (p *Parser) nextToken() {
 	p.peekPrecedence = precedences[p.peekToken.Type]
 }
 
-func (p *Parser) parseExpression() ast.Node {
+func (p *Parser) parseExpression(precedence int) ast.Node {
 	tok := p.curToken
 	prefixFn, ok := p.prefixFns[tok.Type]
 	if !ok {
@@ -103,7 +110,7 @@ func (p *Parser) parseExpression() ast.Node {
 	}
 
 	left := prefixFn()
-	for p.curPrecedence < p.peekPrecedence {
+	for precedence < p.peekPrecedence {
 		p.nextToken()
 		infixFn, ok := p.infixFns[p.curToken.Type]
 		if !ok {
@@ -120,7 +127,7 @@ func (p *Parser) parseExpression() ast.Node {
 func (p *Parser) parsePrefixExpression() ast.Node {
 	prefix := p.curToken
 	p.nextToken()
-	expression := p.parseExpression()
+	expression := p.parseExpression(PREFIX)
 	node := ast.PrefixExpression{Prefix: prefix, Value: expression}
 
 	return &node
@@ -129,9 +136,16 @@ func (p *Parser) parsePrefixExpression() ast.Node {
 func (p *Parser) parseInfixExpression(left ast.Node) ast.Node {
 	node := ast.InfixExpression{Left: left, Operator: p.curToken}
 	p.nextToken()
-	node.Right = p.parseExpression()
+	node.Right = p.parseExpression(precedences[node.Operator.Type])
 
 	return &node
+}
+
+func (p *Parser) parseParenExpression() ast.Node {
+	p.nextToken()
+	node := p.parseExpression(LOWEST)
+	p.nextToken()
+	return node
 }
 
 func (p *Parser) parseIntegerLiteral() ast.Node {

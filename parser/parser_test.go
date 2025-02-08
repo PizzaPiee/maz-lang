@@ -76,6 +76,18 @@ func TestParseExpression(t *testing.T) {
 				},
 			},
 		},
+		{
+			Expression: "(5+1)*2",
+			ExpectedNode: &ast.InfixExpression{
+				Left: &ast.InfixExpression{
+					Left:     &ast.IntegerLiteral{Value: 5},
+					Operator: token.Token{Type: token.PLUS, Literal: "+"},
+					Right:    &ast.IntegerLiteral{Value: 1},
+				},
+				Operator: token.Token{Type: token.ASTERISK, Literal: "*"},
+				Right:    &ast.IntegerLiteral{Value: 2},
+			},
+		},
 	}
 
 	for _, tt := range tests {
