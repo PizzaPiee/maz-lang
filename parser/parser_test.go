@@ -58,3 +58,33 @@ func TestParsePrefixExpression(t *testing.T) {
 		}
 	}
 }
+
+func TestParseExpression(t *testing.T) {
+	tests := []struct {
+		Expression   string
+		ExpectedNode ast.Node
+	}{
+		{
+			Expression: "5+1*2",
+			ExpectedNode: &ast.InfixExpression{
+				Left:     &ast.IntegerLiteral{Value: 5},
+				Operator: token.Token{Type: token.PLUS, Literal: "+"},
+				Right: &ast.InfixExpression{
+					Left:     &ast.IntegerLiteral{Value: 1},
+					Operator: token.Token{Type: token.ASTERISK, Literal: "*"},
+					Right:    &ast.IntegerLiteral{Value: 2},
+				},
+			},
+		},
+	}
+
+	for _, tt := range tests {
+		l := lexer.New(tt.Expression)
+		p := New(&l)
+		program := p.Parse()
+
+		if !cmp.Equal(program.Statements[0], tt.ExpectedNode) {
+			t.Errorf("expected node: %+v, instead got: %+v\n", tt.ExpectedNode, program.Statements[0])
+		}
+	}
+}
