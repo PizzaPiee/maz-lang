@@ -1,7 +1,6 @@
 package parser
 
 import (
-	"fmt"
 	"maz-lang/ast"
 	"maz-lang/lexer"
 	"maz-lang/token"
@@ -134,6 +133,11 @@ func (p *Parser) parseExpression(precedence int) ast.Node {
 		left = infixFn(left)
 	}
 
+	if openParen != 0 {
+		openParen = 0
+		left = &ast.SyntaxError{Msg: "unexpected parenthesis", Token: p.curToken}
+	}
+
 	return left
 }
 
@@ -151,6 +155,11 @@ func (p *Parser) parseInfixExpression(left ast.Node) ast.Node {
 	p.nextToken()
 	node.Right = p.parseExpression(precedences[node.Operator.Type])
 
+	switch node.Right.(type) {
+	case *ast.SyntaxError:
+		return node.Right
+	}
+
 	return &node
 }
 
@@ -158,11 +167,6 @@ func (p *Parser) parseParenExpression() ast.Node {
 	openParen++
 	p.nextToken()
 	node := p.parseExpression(LOWEST)
-
-	if openParen != 0 {
-		openParen = 0
-		return &ast.SyntaxError{Msg: "unexpected parenthesis", Token: p.curToken}
-	}
 
 	p.nextToken()
 	return node
