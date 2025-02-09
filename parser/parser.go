@@ -27,6 +27,8 @@ var precedences = map[token.TokenType]int{
 	token.IDENT:    IDENT,
 }
 
+var openParen = 0
+
 type Parser struct {
 	lexer *lexer.Lexer
 
@@ -89,6 +91,11 @@ func (p *Parser) Parse() ast.Program {
 
 		node := p.parseExpression(LOWEST)
 		program.Statements = append(program.Statements, node)
+
+		switch node.(type) {
+		case *ast.SyntaxError:
+			return program
+		}
 		p.nextToken()
 	}
 }
@@ -105,8 +112,7 @@ func (p *Parser) parseExpression(precedence int) ast.Node {
 	tok := p.curToken
 	prefixFn, ok := p.prefixFns[tok.Type]
 	if !ok {
-		// TODO: return error if no function is found
-		return nil
+		return &ast.SyntaxError{Msg: "cannot parse current token", Token: p.curToken}
 	}
 
 	left := prefixFn()
@@ -114,7 +120,10 @@ func (p *Parser) parseExpression(precedence int) ast.Node {
 		p.nextToken()
 		infixFn, ok := p.infixFns[p.curToken.Type]
 		if !ok {
-			// TODO: return error if no function is found
+			switch p.curToken.Type {
+			case token.RPAREN:
+				openParen--
+			}
 			break
 		}
 
@@ -142,8 +151,20 @@ func (p *Parser) parseInfixExpression(left ast.Node) ast.Node {
 }
 
 func (p *Parser) parseParenExpression() ast.Node {
+	openParen++
 	p.nextToken()
 	node := p.parseExpression(LOWEST)
+
+	if p.curToken.Type == token.RPAREN {
+		openParen--
+	}
+
+	if openParen != 0 {
+		return &ast.SyntaxError{Msg: "unexpected parenthesis", Token: p.curToken}
+	}
+
+	openParen = 0
+
 	p.nextToken()
 	return node
 }

@@ -54,3 +54,14 @@ type BooleanLiteral struct {
 }
 
 func (bl *BooleanLiteral) String() string { return fmt.Sprintf("%v", bl.Value) }
+
+type SyntaxError struct {
+	Msg   string
+	Token token.Token
+}
+
+func (se *SyntaxError) String() string {
+	return fmt.Sprintf("Syntax error: %s\nError near: %s", se.Msg, se.Token.Literal)
+}
+
+func (se *SyntaxError) Error() string { return se.String() }
