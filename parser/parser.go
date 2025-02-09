@@ -1,6 +1,7 @@
 package parser
 
 import (
+	"fmt"
 	"maz-lang/ast"
 	"maz-lang/lexer"
 	"maz-lang/token"
@@ -27,6 +28,9 @@ var precedences = map[token.TokenType]int{
 	token.IDENT:    IDENT,
 }
 
+// This is a counter that keeps track of open parenthesis.
+// When parsing parenthesis at the end of it the value of this counter
+// must be equal to zero.
 var openParen = 0
 
 type Parser struct {
@@ -155,15 +159,10 @@ func (p *Parser) parseParenExpression() ast.Node {
 	p.nextToken()
 	node := p.parseExpression(LOWEST)
 
-	if p.curToken.Type == token.RPAREN {
-		openParen--
-	}
-
 	if openParen != 0 {
+		openParen = 0
 		return &ast.SyntaxError{Msg: "unexpected parenthesis", Token: p.curToken}
 	}
-
-	openParen = 0
 
 	p.nextToken()
 	return node
