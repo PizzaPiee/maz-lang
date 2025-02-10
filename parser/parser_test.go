@@ -149,6 +149,35 @@ func TestParseExpression(t *testing.T) {
 	}
 }
 
+func TestParseBlockExpressions(t *testing.T) {
+	tests := []struct {
+		Expression   string
+		ExpectedNode ast.Node
+		End          token.TokenType
+	}{
+		{
+			Expression: "{5+1} let a = 1+2;",
+			ExpectedNode: &ast.InfixExpression{
+				Left:     &ast.IntegerLiteral{Value: 5},
+				Operator: token.Token{Type: token.PLUS, Literal: "+"},
+				Right:    &ast.IntegerLiteral{Value: 1},
+			},
+			End: token.RBRACE,
+		},
+	}
+
+	for _, tt := range tests {
+		l := lexer.New(tt.Expression)
+		p := New(&l)
+		p.nextToken() // Skip first token
+		node := p.parseExpression(LOWEST, tt.End)
+
+		if !cmp.Equal(node, tt.ExpectedNode) {
+			t.Errorf("expected node: %+v, instead got: %+v\n", tt.ExpectedNode, node)
+		}
+	}
+}
+
 func TestParseLetStatement(t *testing.T) {
 	tests := []struct {
 		Expression   string

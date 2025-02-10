@@ -80,3 +80,51 @@ type Identifier struct {
 }
 
 func (id *Identifier) String() string { return id.Name }
+
+type IfStatement struct {
+	MainCondition  Node
+	MainStatements []Node
+	ElseIfs        []ElseIf
+	ElseCondition  Node
+	ElseStatements []Node
+}
+
+func (is *IfStatement) String() string {
+	var buffer bytes.Buffer
+
+	buffer.WriteString(fmt.Sprintf("if (%s) {\n", is.MainCondition.String()))
+	for _, stmt := range is.MainStatements {
+		buffer.WriteString("\t" + stmt.String() + "\n")
+	}
+	buffer.WriteString("}")
+
+	for _, elseIf := range is.ElseIfs {
+		buffer.WriteString(elseIf.String())
+	}
+
+	if is.ElseCondition != nil {
+		buffer.WriteString(" else {")
+		for _, stmt := range is.ElseStatements {
+			buffer.WriteString("\t" + stmt.String() + "\n")
+		}
+	}
+
+	return buffer.String()
+}
+
+type ElseIf struct {
+	Condition  string
+	Statements []Node
+}
+
+func (ei *ElseIf) String() string {
+	var buffer bytes.Buffer
+
+	buffer.WriteString("else if (%s) {")
+	for _, stmt := range ei.Statements {
+		buffer.WriteString("\t" + stmt.String() + "\n")
+	}
+	buffer.WriteString("}")
+
+	return buffer.String()
+}

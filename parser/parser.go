@@ -103,7 +103,7 @@ func (p *Parser) Parse() ast.Program {
 			return program
 		}
 
-		node := p.parseExpression(LOWEST)
+		node := p.parseExpression(LOWEST, token.EOF)
 		program.Statements = append(program.Statements, node)
 
 		switch node.(type) {
@@ -130,7 +130,16 @@ func (p *Parser) peekTokenIs(token token.TokenType) bool {
 	return false
 }
 
-func (p *Parser) parseExpression(precedence int) ast.Node {
+func (p *Parser) isError(node ast.Node) bool {
+	switch node.(type) {
+	case *ast.SyntaxError:
+		return true
+	}
+
+	return false
+}
+
+func (p *Parser) parseExpression(precedence int, end token.TokenType) ast.Node {
 	tok := p.curToken
 	prefixFn, ok := p.prefixFns[tok.Type]
 	if !ok {
@@ -138,6 +147,11 @@ func (p *Parser) parseExpression(precedence int) ast.Node {
 	}
 
 	left := prefixFn()
+
+	if p.peekTokenIs(end) {
+		return left
+	}
+
 	for precedence < p.peekPrecedence {
 		p.nextToken()
 		infixFn, ok := p.infixFns[p.curToken.Type]
@@ -163,7 +177,7 @@ func (p *Parser) parseExpression(precedence int) ast.Node {
 func (p *Parser) parsePrefixExpression() ast.Node {
 	prefix := p.curToken
 	p.nextToken()
-	expression := p.parseExpression(PREFIX)
+	expression := p.parseExpression(PREFIX, token.EOF)
 	node := ast.PrefixExpression{Prefix: prefix, Value: expression}
 
 	return &node
@@ -172,10 +186,9 @@ func (p *Parser) parsePrefixExpression() ast.Node {
 func (p *Parser) parseInfixExpression(left ast.Node) ast.Node {
 	node := ast.InfixExpression{Left: left, Operator: p.curToken}
 	p.nextToken()
-	node.Right = p.parseExpression(precedences[node.Operator.Type])
+	node.Right = p.parseExpression(precedences[node.Operator.Type], token.EOF)
 
-	switch node.Right.(type) {
-	case *ast.SyntaxError:
+	if p.isError(node.Right) {
 		return node.Right
 	}
 
@@ -185,7 +198,7 @@ func (p *Parser) parseInfixExpression(left ast.Node) ast.Node {
 func (p *Parser) parseParenExpression() ast.Node {
 	openParen++
 	p.nextToken()
-	node := p.parseExpression(LOWEST)
+	node := p.parseExpression(LOWEST, token.EOF)
 
 	return node
 }
@@ -228,9 +241,8 @@ func (p *Parser) parseLetStatement() ast.Node {
 
 	p.nextToken()
 
-	exp := p.parseExpression(LOWEST)
-	switch exp.(type) {
-	case *ast.SyntaxError:
+	exp := p.parseExpression(LOWEST, token.EOF)
+	if p.isError(exp) {
 		return exp
 	}
 
