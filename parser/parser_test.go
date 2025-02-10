@@ -35,6 +35,20 @@ func TestParsePrefixExpression(t *testing.T) {
 				Value:  &ast.BooleanLiteral{Value: false},
 			},
 		},
+		{
+			Expression: "!foo",
+			ExpectedNode: ast.PrefixExpression{
+				Prefix: token.Token{Type: token.BANG, Literal: "!"},
+				Value:  &ast.Identifier{Name: "foo"},
+			},
+		},
+		{
+			Expression: "-foo",
+			ExpectedNode: ast.PrefixExpression{
+				Prefix: token.Token{Type: token.MINUS, Literal: "-"},
+				Value:  &ast.Identifier{Name: "foo"},
+			},
+		},
 	}
 
 	for _, tt := range tests {
@@ -86,6 +100,26 @@ func TestParseExpression(t *testing.T) {
 				},
 				Operator: token.Token{Type: token.ASTERISK, Literal: "*"},
 				Right:    &ast.IntegerLiteral{Value: 2},
+			},
+		},
+		{
+			Expression: "foo+bar",
+			ExpectedNode: &ast.InfixExpression{
+				Left:     &ast.Identifier{Name: "foo"},
+				Operator: token.Token{Type: token.PLUS, Literal: "+"},
+				Right:    &ast.Identifier{Name: "bar"},
+			},
+		},
+		{
+			Expression: "foo*bar+1",
+			ExpectedNode: &ast.InfixExpression{
+				Left: &ast.InfixExpression{
+					Left:     &ast.Identifier{Name: "foo"},
+					Operator: token.Token{Type: token.ASTERISK, Literal: "*"},
+					Right:    &ast.Identifier{Name: "bar"},
+				},
+				Operator: token.Token{Type: token.PLUS, Literal: "+"},
+				Right:    &ast.IntegerLiteral{Value: 1},
 			},
 		},
 		{
@@ -143,6 +177,17 @@ func TestParseLetStatement(t *testing.T) {
 					},
 					Operator: token.Token{Type: token.ASTERISK, Literal: "*"},
 					Right:    &ast.IntegerLiteral{Value: 2},
+				},
+			},
+		},
+		{
+			Expression: "let foo = bar + 1;",
+			ExpectedNode: &ast.LetStatement{
+				Ident: "foo",
+				Value: &ast.InfixExpression{
+					Left:     &ast.Identifier{Name: "bar"},
+					Operator: token.Token{Type: token.PLUS, Literal: "+"},
+					Right:    &ast.IntegerLiteral{Value: 1},
 				},
 			},
 		},
