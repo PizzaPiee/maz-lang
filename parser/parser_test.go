@@ -88,6 +88,20 @@ func TestParseExpression(t *testing.T) {
 				Right:    &ast.IntegerLiteral{Value: 2},
 			},
 		},
+		{
+			Expression: "(5+1",
+			ExpectedNode: &ast.SyntaxError{
+				Msg:   ErrUnexpectedParenthesis,
+				Token: token.Token{Type: token.INT, Literal: "1"},
+			},
+		},
+		{
+			Expression: "5+1)",
+			ExpectedNode: &ast.SyntaxError{
+				Msg:   ErrUnexpectedParenthesis,
+				Token: token.Token{Type: token.RPAREN, Literal: ")"},
+			},
+		},
 	}
 
 	for _, tt := range tests {

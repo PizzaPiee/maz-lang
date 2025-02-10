@@ -17,6 +17,11 @@ const (
 	IDENT
 )
 
+const (
+	ErrUnexpectedParenthesis = "unexpected parenthesis"
+	ErrCannotParseToken      = "cannot parse current token"
+)
+
 var precedences = map[token.TokenType]int{
 	token.PLUS:     PLUS,
 	token.MINUS:    PLUS,
@@ -115,7 +120,7 @@ func (p *Parser) parseExpression(precedence int) ast.Node {
 	tok := p.curToken
 	prefixFn, ok := p.prefixFns[tok.Type]
 	if !ok {
-		return &ast.SyntaxError{Msg: "cannot parse current token", Token: p.curToken}
+		return &ast.SyntaxError{Msg: ErrCannotParseToken, Token: p.curToken}
 	}
 
 	left := prefixFn()
@@ -135,7 +140,7 @@ func (p *Parser) parseExpression(precedence int) ast.Node {
 
 	if openParen != 0 {
 		openParen = 0
-		left = &ast.SyntaxError{Msg: "unexpected parenthesis", Token: p.curToken}
+		left = &ast.SyntaxError{Msg: ErrUnexpectedParenthesis, Token: p.curToken}
 	}
 
 	return left
