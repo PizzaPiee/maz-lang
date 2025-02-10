@@ -54,7 +54,7 @@ func TestParsePrefixExpression(t *testing.T) {
 	for _, tt := range tests {
 		l := lexer.New(tt.Expression)
 		p := New(&l)
-		program := p.Parse()
+		program := p.Parse(token.EOF)
 
 		for _, stmt := range program.Statements {
 			pe, ok := stmt.(*ast.PrefixExpression)
@@ -141,7 +141,7 @@ func TestParseExpression(t *testing.T) {
 	for _, tt := range tests {
 		l := lexer.New(tt.Expression)
 		p := New(&l)
-		program := p.Parse()
+		program := p.Parse(token.EOF)
 
 		if !cmp.Equal(program.Statements[0], tt.ExpectedNode) {
 			t.Errorf("expected node: %+v, instead got: %+v\n", tt.ExpectedNode, program.Statements[0])
@@ -170,10 +170,10 @@ func TestParseBlockExpressions(t *testing.T) {
 		l := lexer.New(tt.Expression)
 		p := New(&l)
 		p.nextToken() // Skip first token
-		node := p.parseExpression(LOWEST, tt.End)
+		program := p.Parse(tt.End)
 
-		if !cmp.Equal(node, tt.ExpectedNode) {
-			t.Errorf("expected node: %+v, instead got: %+v\n", tt.ExpectedNode, node)
+		if !cmp.Equal(program.Statements[0], tt.ExpectedNode) {
+			t.Errorf("expected node: %+v, instead got: %+v\n", tt.ExpectedNode, program.Statements[0])
 		}
 	}
 }
@@ -253,7 +253,7 @@ func TestParseLetStatement(t *testing.T) {
 	for _, tt := range tests {
 		l := lexer.New(tt.Expression)
 		p := New(&l)
-		program := p.Parse()
+		program := p.Parse(token.EOF)
 
 		if !cmp.Equal(program.Statements[0], tt.ExpectedNode) {
 			t.Errorf("expected node: %+v, instead got %+v\n", tt.ExpectedNode, program.Statements[0])

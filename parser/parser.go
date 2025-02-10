@@ -94,22 +94,22 @@ func (p *Parser) registerInfixFn(key token.TokenType, fn InfixFn) {
 	p.infixFns[key] = fn
 }
 
-func (p *Parser) Parse() ast.Program {
+func (p *Parser) Parse(end token.TokenType) ast.Program {
 	var program ast.Program
 
 	for {
 		tok := p.curToken
-		if tok.Type == token.EOF || tok.Type == token.ILLEGAL {
+		if tok.Type == end || tok.Type == token.ILLEGAL {
 			return program
 		}
 
-		node := p.parseExpression(LOWEST, token.EOF)
+		node := p.parseExpression(LOWEST, end)
 		program.Statements = append(program.Statements, node)
 
-		switch node.(type) {
-		case *ast.SyntaxError:
+		if p.isError(node) {
 			return program
 		}
+
 		p.nextToken()
 	}
 }
@@ -241,7 +241,7 @@ func (p *Parser) parseLetStatement() ast.Node {
 
 	p.nextToken()
 
-	exp := p.parseExpression(LOWEST, token.EOF)
+	exp := p.parseExpression(LOWEST, token.SEMICOLON)
 	if p.isError(exp) {
 		return exp
 	}
