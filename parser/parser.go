@@ -178,7 +178,6 @@ func (p *Parser) parseParenExpression() ast.Node {
 }
 
 func (p *Parser) parseIntegerLiteral() ast.Node {
-	// FIX: handle the case where the literal value cannot be converted
 	num, _ := strconv.Atoi(p.curToken.Literal)
 	node := ast.IntegerLiteral{Value: int64(num)}
 
@@ -186,7 +185,6 @@ func (p *Parser) parseIntegerLiteral() ast.Node {
 }
 
 func (p *Parser) parseBooleanLiteral() ast.Node {
-	// FIX: use an else if and return error
 	if p.curToken.Type == token.TRUE {
 		return &ast.BooleanLiteral{Value: true}
 	}
