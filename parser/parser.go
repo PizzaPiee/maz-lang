@@ -20,6 +20,9 @@ const (
 const (
 	ErrUnexpectedParenthesis = "unexpected parenthesis"
 	ErrCannotParseToken      = "cannot parse current token"
+	ErrExpectedIdentifier    = "expected next token to be an identifier"
+	ErrExpectedAssignment    = "expected assignment"
+	ErrMissingSemicolon      = "missing semicolon"
 )
 
 var precedences = map[token.TokenType]int{
@@ -68,6 +71,7 @@ func New(lexer *lexer.Lexer) *Parser {
 	p.registerPrefixFn(token.TRUE, p.parseBooleanLiteral)
 	p.registerPrefixFn(token.FALSE, p.parseBooleanLiteral)
 	p.registerPrefixFn(token.LPAREN, p.parseParenExpression)
+	p.registerPrefixFn(token.LET, p.parseLetStatement)
 
 	p.registerInfixFn(token.PLUS, p.parseInfixExpression)
 	p.registerInfixFn(token.MINUS, p.parseInfixExpression)
@@ -173,7 +177,6 @@ func (p *Parser) parseParenExpression() ast.Node {
 	p.nextToken()
 	node := p.parseExpression(LOWEST)
 
-	p.nextToken()
 	return node
 }
 
@@ -189,4 +192,34 @@ func (p *Parser) parseBooleanLiteral() ast.Node {
 		return &ast.BooleanLiteral{Value: true}
 	}
 	return &ast.BooleanLiteral{Value: false}
+}
+
+func (p *Parser) parseLetStatement() ast.Node {
+	if p.peekToken.Type != token.IDENT {
+		return &ast.SyntaxError{Msg: ErrExpectedIdentifier, Token: p.curToken}
+	}
+
+	p.nextToken()
+	ident := p.curToken.Literal
+
+	if p.peekToken.Type != token.ASSIGN {
+		return &ast.SyntaxError{Msg: ErrExpectedAssignment, Token: p.curToken}
+	}
+
+	p.nextToken()
+	p.nextToken()
+
+	exp := p.parseExpression(LOWEST)
+	switch exp.(type) {
+	case *ast.SyntaxError:
+		return exp
+	}
+
+	if p.peekToken.Type != token.SEMICOLON {
+		return &ast.SyntaxError{Msg: ErrMissingSemicolon, Token: p.curToken}
+	}
+
+	p.nextToken()
+
+	return &ast.LetStatement{Ident: ident, Value: exp}
 }

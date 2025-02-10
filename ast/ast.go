@@ -65,3 +65,12 @@ func (se *SyntaxError) String() string {
 }
 
 func (se *SyntaxError) Error() string { return se.String() }
+
+type LetStatement struct {
+	Ident string
+	Value Node
+}
+
+func (ls *LetStatement) String() string {
+	return fmt.Sprintf("let %s = %s;", ls.Ident, ls.Value.String())
+}
