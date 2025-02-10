@@ -74,3 +74,9 @@ type LetStatement struct {
 func (ls *LetStatement) String() string {
 	return fmt.Sprintf("let %s = %s;", ls.Ident, ls.Value.String())
 }
+
+type Identifier struct {
+	Name string
+}
+
+func (id *Identifier) String() string { return id.Name }
