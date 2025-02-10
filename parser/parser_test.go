@@ -114,3 +114,75 @@ func TestParseExpression(t *testing.T) {
 		}
 	}
 }
+
+func TestParseLetStatement(t *testing.T) {
+	tests := []struct {
+		Expression   string
+		ExpectedNode ast.Node
+	}{
+		{
+			Expression: "let a = 5+1;",
+			ExpectedNode: &ast.LetStatement{
+				Ident: "a",
+				Value: &ast.InfixExpression{
+					Left:     &ast.IntegerLiteral{Value: 5},
+					Operator: token.Token{Type: token.PLUS, Literal: "+"},
+					Right:    &ast.IntegerLiteral{Value: 1},
+				},
+			},
+		},
+		{
+			Expression: "let foo = (2+5)*2;",
+			ExpectedNode: &ast.LetStatement{
+				Ident: "foo",
+				Value: &ast.InfixExpression{
+					Left: &ast.InfixExpression{
+						Left:     &ast.IntegerLiteral{Value: 2},
+						Operator: token.Token{Type: token.PLUS, Literal: "+"},
+						Right:    &ast.IntegerLiteral{Value: 5},
+					},
+					Operator: token.Token{Type: token.ASTERISK, Literal: "*"},
+					Right:    &ast.IntegerLiteral{Value: 2},
+				},
+			},
+		},
+		{
+			Expression: "let 0 = 5+1;",
+			ExpectedNode: &ast.SyntaxError{
+				Msg:   ErrExpectedIdentifier,
+				Token: token.Token{Type: token.LET, Literal: "let"},
+			},
+		},
+		{
+			Expression: "let a",
+			ExpectedNode: &ast.SyntaxError{
+				Msg:   ErrExpectedAssignment,
+				Token: token.Token{Type: token.IDENT, Literal: "a"},
+			},
+		},
+		{
+			Expression: "let a = 1",
+			ExpectedNode: &ast.SyntaxError{
+				Msg:   ErrMissingSemicolon,
+				Token: token.Token{Type: token.INT, Literal: "1"},
+			},
+		},
+		{
+			Expression: "let a = ;",
+			ExpectedNode: &ast.SyntaxError{
+				Msg:   ErrExpectedExpression,
+				Token: token.Token{Type: token.ASSIGN, Literal: "="},
+			},
+		},
+	}
+
+	for _, tt := range tests {
+		l := lexer.New(tt.Expression)
+		p := New(&l)
+		program := p.Parse()
+
+		if !cmp.Equal(program.Statements[0], tt.ExpectedNode) {
+			t.Errorf("expected node: %+v, instead got %+v\n", tt.ExpectedNode, program.Statements[0])
+		}
+	}
+}

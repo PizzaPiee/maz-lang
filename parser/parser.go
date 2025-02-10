@@ -23,6 +23,7 @@ const (
 	ErrExpectedIdentifier    = "expected next token to be an identifier"
 	ErrExpectedAssignment    = "expected assignment"
 	ErrMissingSemicolon      = "missing semicolon"
+	ErrExpectedExpression    = "expected expression"
 )
 
 var precedences = map[token.TokenType]int{
@@ -207,6 +208,11 @@ func (p *Parser) parseLetStatement() ast.Node {
 	}
 
 	p.nextToken()
+
+	if p.peekToken.Type == token.SEMICOLON || p.peekToken.Type == token.EOF {
+		return &ast.SyntaxError{Msg: ErrExpectedExpression, Token: p.curToken}
+	}
+
 	p.nextToken()
 
 	exp := p.parseExpression(LOWEST)
