@@ -85,7 +85,6 @@ type IfStatement struct {
 	MainCondition  Node
 	MainStatements []Node
 	ElseIfs        []ElseIf
-	ElseCondition  Node
 	ElseStatements []Node
 }
 
@@ -102,25 +101,26 @@ func (is *IfStatement) String() string {
 		buffer.WriteString(elseIf.String())
 	}
 
-	if is.ElseCondition != nil {
-		buffer.WriteString(" else {")
+	if len(is.ElseStatements) > 0 {
+		buffer.WriteString(" else {\n")
 		for _, stmt := range is.ElseStatements {
 			buffer.WriteString("\t" + stmt.String() + "\n")
 		}
+		buffer.WriteString("}\n")
 	}
 
 	return buffer.String()
 }
 
 type ElseIf struct {
-	Condition  string
+	Condition  Node
 	Statements []Node
 }
 
 func (ei *ElseIf) String() string {
 	var buffer bytes.Buffer
 
-	buffer.WriteString("else if (%s) {")
+	buffer.WriteString(fmt.Sprintf(" else if (%s) {\n", ei.Condition.String()))
 	for _, stmt := range ei.Statements {
 		buffer.WriteString("\t" + stmt.String() + "\n")
 	}

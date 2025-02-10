@@ -74,6 +74,7 @@ func New(lexer *lexer.Lexer) *Parser {
 	p.registerPrefixFn(token.LPAREN, p.parseParenExpression)
 	p.registerPrefixFn(token.LET, p.parseLetStatement)
 	p.registerPrefixFn(token.IDENT, p.parseIdentifier)
+	p.registerPrefixFn(token.IF, p.parseIfStatement)
 
 	p.registerInfixFn(token.PLUS, p.parseInfixExpression)
 	p.registerInfixFn(token.MINUS, p.parseInfixExpression)
@@ -253,4 +254,72 @@ func (p *Parser) parseLetStatement() ast.Node {
 	p.nextToken()
 
 	return &ast.LetStatement{Ident: ident, Value: exp}
+}
+
+// FIXME: make assertions about peekToken and return errors
+func (p *Parser) parseIfStatement() ast.Node {
+	node := ast.IfStatement{}
+
+	// Parse main condition
+	p.nextToken()
+	condition := p.parseExpression(LOWEST, token.LBRACE)
+	if p.isError(condition) {
+		return condition
+	}
+	node.MainCondition = condition
+
+	// Parse body of main condition
+	p.nextToken()
+	p.nextToken()
+	stmts := p.Parse(token.RBRACE).Statements
+	for _, stmt := range stmts {
+		if p.isError(stmt) {
+			return stmt
+		}
+	}
+	node.MainStatements = stmts
+
+	var elseIfs []ast.ElseIf
+	for p.peekTokenIs(token.ELSE) {
+		p.nextToken()
+		if p.peekTokenIs(token.IF) {
+			// Parse else if condition
+			elseIf := ast.ElseIf{}
+			p.nextToken()
+			p.nextToken()
+
+			condition = p.parseExpression(LOWEST, token.LBRACE)
+			if p.isError(condition) {
+				return condition
+			}
+			elseIf.Condition = condition
+
+			// Parse body of else if condition
+			p.nextToken()
+			p.nextToken()
+			stmts = p.Parse(token.RBRACE).Statements
+			for _, stmt := range stmts {
+				if p.isError(stmt) {
+					return stmt
+				}
+			}
+			elseIf.Statements = stmts
+
+			elseIfs = append(elseIfs, elseIf)
+		} else {
+			// Parse body of else condition
+			p.nextToken() // FIXME: make sure it is a RBRACE token
+			p.nextToken()
+			stmts = p.Parse(token.RBRACE).Statements
+			for _, stmt := range stmts {
+				if p.isError(stmt) {
+					return stmt
+				}
+			}
+			node.ElseStatements = stmts
+		}
+	}
+	node.ElseIfs = elseIfs
+
+	return &node
 }

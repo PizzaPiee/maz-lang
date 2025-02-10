@@ -19,7 +19,7 @@ func Run() {
 
 		l := lexer.New(input)
 		p := parser.New(&l)
-		program := p.Parse()
+		program := p.Parse(token.EOF)
 		fmt.Printf("%s\n", program.String())
 	}
 }
