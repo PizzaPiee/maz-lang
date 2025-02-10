@@ -122,6 +122,14 @@ func (p *Parser) nextToken() {
 	p.peekPrecedence = precedences[p.peekToken.Type]
 }
 
+func (p *Parser) peekTokenIs(token token.TokenType) bool {
+	if p.peekToken.Type == token {
+		return true
+	}
+
+	return false
+}
+
 func (p *Parser) parseExpression(precedence int) ast.Node {
 	tok := p.curToken
 	prefixFn, ok := p.prefixFns[tok.Type]
@@ -201,20 +209,20 @@ func (p *Parser) parseIdentifier() ast.Node {
 }
 
 func (p *Parser) parseLetStatement() ast.Node {
-	if p.peekToken.Type != token.IDENT {
+	if !p.peekTokenIs(token.IDENT) {
 		return &ast.SyntaxError{Msg: ErrExpectedIdentifier, Token: p.curToken}
 	}
 
 	p.nextToken()
 	ident := p.curToken.Literal
 
-	if p.peekToken.Type != token.ASSIGN {
+	if !p.peekTokenIs(token.ASSIGN) {
 		return &ast.SyntaxError{Msg: ErrExpectedAssignment, Token: p.curToken}
 	}
 
 	p.nextToken()
 
-	if p.peekToken.Type == token.SEMICOLON || p.peekToken.Type == token.EOF {
+	if p.peekTokenIs(token.SEMICOLON) || p.peekTokenIs(token.EOF) {
 		return &ast.SyntaxError{Msg: ErrExpectedExpression, Token: p.curToken}
 	}
 
@@ -226,7 +234,7 @@ func (p *Parser) parseLetStatement() ast.Node {
 		return exp
 	}
 
-	if p.peekToken.Type != token.SEMICOLON {
+	if !p.peekTokenIs(token.SEMICOLON) {
 		return &ast.SyntaxError{Msg: ErrMissingSemicolon, Token: p.curToken}
 	}
 
