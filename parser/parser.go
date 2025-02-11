@@ -10,6 +10,7 @@ import (
 const (
 	_ = iota
 	LOWEST
+	EQUAL
 	PLUS
 	PRODUCT
 	PREFIX
@@ -34,6 +35,11 @@ var precedences = map[token.TokenType]int{
 	token.LPAREN:   PAREN,
 	token.RPAREN:   PAREN,
 	token.IDENT:    IDENT,
+	token.EQ:       EQUAL,
+	token.GT:       EQUAL,
+	token.LT:       EQUAL,
+	token.GTEQ:     EQUAL,
+	token.LTEQ:     EQUAL,
 }
 
 // This is a counter that keeps track of open parenthesis.
@@ -80,6 +86,11 @@ func New(lexer *lexer.Lexer) *Parser {
 	p.registerInfixFn(token.MINUS, p.parseInfixExpression)
 	p.registerInfixFn(token.ASTERISK, p.parseInfixExpression)
 	p.registerInfixFn(token.SLASH, p.parseInfixExpression)
+	p.registerInfixFn(token.EQ, p.parseInfixExpression)
+	p.registerInfixFn(token.GT, p.parseInfixExpression)
+	p.registerInfixFn(token.LT, p.parseInfixExpression)
+	p.registerInfixFn(token.GTEQ, p.parseInfixExpression)
+	p.registerInfixFn(token.LTEQ, p.parseInfixExpression)
 
 	p.nextToken()
 	p.nextToken()
