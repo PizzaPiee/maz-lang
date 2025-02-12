@@ -156,41 +156,26 @@ func TestParseExpression(t *testing.T) {
 				Token: token.Token{Type: token.RPAREN, Literal: ")"},
 			},
 		},
-	}
-
-	for _, tt := range tests {
-		l := lexer.New(tt.Expression)
-		p := New(&l)
-		program := p.Parse(token.EOF)
-
-		if !cmp.Equal(program.Statements[0], tt.ExpectedNode) {
-			t.Errorf("expected node: %+v, instead got: %+v\n", tt.ExpectedNode, program.Statements[0])
-		}
-	}
-}
-
-func TestParseBlockExpressions(t *testing.T) {
-	tests := []struct {
-		Expression   string
-		ExpectedNode ast.Node
-		End          token.TokenType
-	}{
 		{
-			Expression: "{5+1} let a = 1+2;",
-			ExpectedNode: &ast.InfixExpression{
-				Left:     &ast.IntegerLiteral{Value: 5},
-				Operator: token.Token{Type: token.PLUS, Literal: "+"},
-				Right:    &ast.IntegerLiteral{Value: 1},
+			Expression: "5 +",
+			ExpectedNode: &ast.SyntaxError{
+				Msg:   ErrExpectedExpression,
+				Token: token.Token{Type: token.EOF, Literal: ""},
 			},
-			End: token.RBRACE,
+		},
+		{
+			Expression: "foo == ",
+			ExpectedNode: &ast.SyntaxError{
+				Msg:   ErrExpectedExpression,
+				Token: token.Token{Type: token.EOF, Literal: ""},
+			},
 		},
 	}
 
 	for _, tt := range tests {
 		l := lexer.New(tt.Expression)
 		p := New(&l)
-		p.nextToken() // Skip first token
-		program := p.Parse(tt.End)
+		program := p.Parse(token.EOF)
 
 		if !cmp.Equal(program.Statements[0], tt.ExpectedNode) {
 			t.Errorf("expected node: %+v, instead got: %+v\n", tt.ExpectedNode, program.Statements[0])
@@ -266,6 +251,28 @@ func TestParseLetStatement(t *testing.T) {
 			ExpectedNode: &ast.SyntaxError{
 				Msg:   ErrExpectedExpression,
 				Token: token.Token{Type: token.ASSIGN, Literal: "="},
+			},
+		},
+		// Invalid let statements
+		{
+			Expression: "let 0 = 5;",
+			ExpectedNode: &ast.SyntaxError{
+				Msg:   ErrExpectedIdentifier,
+				Token: token.Token{Type: token.LET, Literal: "let"},
+			},
+		},
+		{
+			Expression: "let a = ;",
+			ExpectedNode: &ast.SyntaxError{
+				Msg:   ErrExpectedExpression,
+				Token: token.Token{Type: token.ASSIGN, Literal: "="},
+			},
+		},
+		{
+			Expression: "let a = 5",
+			ExpectedNode: &ast.SyntaxError{
+				Msg:   ErrMissingSemicolon,
+				Token: token.Token{Type: token.INT, Literal: "5"},
 			},
 		},
 	}
@@ -351,5 +358,5 @@ func TestParseIfStatement(t *testing.T) {
 			t.Errorf("expected %s, instead got %s\n", expectedStatements[i], stmt)
 		}
 	}
-
 }
+

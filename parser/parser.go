@@ -155,7 +155,7 @@ func (p *Parser) parseExpression(precedence int, end token.TokenType) ast.Node {
 	tok := p.curToken
 	prefixFn, ok := p.prefixFns[tok.Type]
 	if !ok {
-		return &ast.SyntaxError{Msg: ErrCannotParseToken, Token: p.curToken}
+		return &ast.SyntaxError{Msg: ErrExpectedExpression, Token: p.curToken}
 	}
 
 	left := prefixFn()
