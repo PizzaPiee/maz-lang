@@ -25,6 +25,7 @@ const (
 	ErrExpectedAssignment    = "expected assignment"
 	ErrMissingSemicolon      = "missing semicolon"
 	ErrExpectedExpression    = "expected expression"
+	ErrExpectedBlock         = "expected block"
 )
 
 var precedences = map[token.TokenType]int{
@@ -279,6 +280,11 @@ func (p *Parser) parseIfStatement() ast.Node {
 	}
 	node.MainCondition = condition
 
+	// Next token must be a '{'
+	if !p.peekTokenIs(token.LBRACE) {
+		return &ast.SyntaxError{Msg: ErrExpectedBlock, Token: p.curToken}
+	}
+
 	// Parse body of main condition
 	p.nextToken()
 	p.nextToken()
@@ -305,6 +311,11 @@ func (p *Parser) parseIfStatement() ast.Node {
 			}
 			elseIf.Condition = condition
 
+			// Next token must be a '{'
+			if !p.peekTokenIs(token.LBRACE) {
+				return &ast.SyntaxError{Msg: ErrExpectedBlock, Token: p.curToken}
+			}
+
 			// Parse body of else if condition
 			p.nextToken()
 			p.nextToken()
@@ -319,7 +330,11 @@ func (p *Parser) parseIfStatement() ast.Node {
 			elseIfs = append(elseIfs, elseIf)
 		} else {
 			// Parse body of else condition
-			p.nextToken() // FIXME: make sure it is a RBRACE token
+			// Next token must be a '{'
+			if !p.peekTokenIs(token.LBRACE) {
+				return &ast.SyntaxError{Msg: ErrExpectedBlock, Token: p.curToken}
+			}
+			p.nextToken()
 			p.nextToken()
 			stmts = p.Parse(token.RBRACE).Statements
 			for _, stmt := range stmts {

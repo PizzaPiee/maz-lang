@@ -253,7 +253,6 @@ func TestParseLetStatement(t *testing.T) {
 				Token: token.Token{Type: token.ASSIGN, Literal: "="},
 			},
 		},
-		// Invalid let statements
 		{
 			Expression: "let 0 = 5;",
 			ExpectedNode: &ast.SyntaxError{
