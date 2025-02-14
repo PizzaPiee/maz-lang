@@ -288,74 +288,82 @@ func TestParseLetStatement(t *testing.T) {
 }
 
 func TestParseIfStatement(t *testing.T) {
-	input := `
-	if a <= 10 {
-		let b = 1;
-	} else if a >= 50 {
-		let b = 2;
-	} else if a == 30 {
-		let b = 3;
-	} else {
-		let b = 0;
-	}
-	`
-
-	expectedStatements := []ast.Node{
-		&ast.IfStatement{
-			MainCondition: &ast.InfixExpression{
-				Left:     &ast.Identifier{Name: "a"},
-				Operator: token.Token{Type: token.LTEQ, Literal: "<="},
-				Right:    &ast.IntegerLiteral{Value: 10},
-			},
-			MainStatements: []ast.Node{
-				&ast.LetStatement{Ident: "b", Value: &ast.IntegerLiteral{Value: 1}},
-			},
-			ElseIfs: []ast.ElseIf{
-				{
-					Condition: &ast.InfixExpression{
-						Left:     &ast.Identifier{Name: "a"},
-						Operator: token.Token{Type: token.GTEQ, Literal: ">="},
-						Right:    &ast.IntegerLiteral{Value: 50},
+	tests := []struct {
+		Expression   string
+		ExpectedNode ast.Node
+	}{
+		{
+			Expression: "if a <= 10 { let b = 1; } else if a >= 50 { let b = 2; } else if a == 30 { let b = 3; } else { let b = 0; }",
+			ExpectedNode: &ast.IfStatement{
+				MainCondition: &ast.InfixExpression{
+					Left:     &ast.Identifier{Name: "a"},
+					Operator: token.Token{Type: token.LTEQ, Literal: "<="},
+					Right:    &ast.IntegerLiteral{Value: 10},
+				},
+				MainStatements: []ast.Node{
+					&ast.LetStatement{Ident: "b", Value: &ast.IntegerLiteral{Value: 1}},
+				},
+				ElseIfs: []ast.ElseIf{
+					{
+						Condition: &ast.InfixExpression{
+							Left:     &ast.Identifier{Name: "a"},
+							Operator: token.Token{Type: token.GTEQ, Literal: ">="},
+							Right:    &ast.IntegerLiteral{Value: 50},
+						},
+						Statements: []ast.Node{
+							&ast.LetStatement{
+								Ident: "b",
+								Value: &ast.IntegerLiteral{Value: 2},
+							},
+						},
 					},
-					Statements: []ast.Node{
-						&ast.LetStatement{
-							Ident: "b",
-							Value: &ast.IntegerLiteral{Value: 2},
+					{
+						Condition: &ast.InfixExpression{
+							Left:     &ast.Identifier{Name: "a"},
+							Operator: token.Token{Type: token.EQ, Literal: "=="},
+							Right:    &ast.IntegerLiteral{Value: 30},
+						},
+						Statements: []ast.Node{
+							&ast.LetStatement{
+								Ident: "b",
+								Value: &ast.IntegerLiteral{Value: 3},
+							},
 						},
 					},
 				},
-				{
-					Condition: &ast.InfixExpression{
-						Left:     &ast.Identifier{Name: "a"},
-						Operator: token.Token{Type: token.EQ, Literal: "=="},
-						Right:    &ast.IntegerLiteral{Value: 30},
-					},
-					Statements: []ast.Node{
-						&ast.LetStatement{
-							Ident: "b",
-							Value: &ast.IntegerLiteral{Value: 3},
-						},
-					},
+				ElseStatements: []ast.Node{
+					&ast.LetStatement{Ident: "b", Value: &ast.IntegerLiteral{Value: 0}},
 				},
-			},
-			ElseStatements: []ast.Node{
-				&ast.LetStatement{Ident: "b", Value: &ast.IntegerLiteral{Value: 0}},
 			},
 		},
-	}
-
-	l := lexer.New(input)
-	p := New(&l)
-	program := p.Parse(token.EOF)
-
-	if len(program.Statements) != len(expectedStatements) {
-		t.Errorf("expected %d statements, instead got %d\n", len(expectedStatements), len(program.Statements))
-	}
-
-	for i, stmt := range program.Statements {
-		if !cmp.Equal(stmt, expectedStatements[i]) {
-			t.Errorf("expected %s, instead got %s\n", expectedStatements[i], stmt)
+		{
+			Expression:   "if ",
+			ExpectedNode: &ast.SyntaxError{
+				Msg: ErrExpectedExpression, Token: token.Token{Type: token.EOF, Literal: ""}
+			},
+		},
+		{
+			Expression:   "if a > b ",
+			ExpectedNode: &ast.SyntaxError{
+				Msg: ErrExpectedBlock, Token: token.Token{Type: token.EOF, Literal: ""}
+			},
+		},
+		{
+			Expression: "if a > b { let a = 5;",
+			ExpectedNode: &ast.SyntaxError{
+				Msg: ErrExpectedExpression, Token: token.Token{Type: token.EOF, Literal: ""}
+			},
 		}
 	}
-}
 
+	for _, tt := range tests {
+		l := lexer.New(tt.Expression)
+		p := New(&l)
+		program := p.Parse(token.EOF)
+
+		if !cmp.Equal(program.Statements[0], tt.ExpectedNode) {
+			t.Errorf("expected %s, instead got %s\n", tt.ExpectedNode, program.Statements[0])
+		}
+	}
+
+}
