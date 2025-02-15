@@ -372,7 +372,7 @@ func (p *Parser) parseReturnStatement() ast.Node {
 }
 
 func (p *Parser) parseFunctionDefinition() ast.Node {
-	node := ast.Function{}
+	node := ast.FunctionDefinition{}
 
 	// Check if it is a named function or an anonymous one
 	if p.peekTokenIs(token.IDENT) {
@@ -416,4 +416,20 @@ func (p *Parser) parseFunctionDefinition() ast.Node {
 	node.Body = body.Statements
 
 	return &node
+}
+
+func (p *Parser) parseArguments() []ast.Node {
+	node := []ast.Node{}
+
+	for !p.peekTokenIs(token.RPAREN) {
+		p.nextToken()
+		arg := p.parseExpression(LOWEST, token.COMMA)
+		node = append(node, arg)
+		if p.peekTokenIs(token.COMMA) {
+			p.nextToken()
+		}
+	}
+	p.nextToken()
+
+	return node
 }

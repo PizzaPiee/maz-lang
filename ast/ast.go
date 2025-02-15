@@ -140,13 +140,13 @@ func (rs *ReturnStatement) String() string {
 	return fmt.Sprintf("return %s;\n", strings.TrimSpace(rs.Expression.String()))
 }
 
-type Function struct {
+type FunctionDefinition struct {
 	Name       string
 	Parameters []Node
 	Body       []Node
 }
 
-func (f *Function) String() string {
+func (f *FunctionDefinition) String() string {
 	var out bytes.Buffer
 
 	out.WriteString("fn ")
@@ -167,6 +167,30 @@ func (f *Function) String() string {
 		out.WriteString("\t" + stmt.String())
 	}
 	out.WriteString("}\n")
+
+	return out.String()
+}
+
+type FunctionCall struct {
+	Name      string
+	Arguments []Node
+}
+
+func (fc *FunctionCall) String() string {
+	var out bytes.Buffer
+
+	if fc.Name != "" {
+		out.WriteString(fc.Name)
+	}
+
+	var arguments []string
+	for _, node := range fc.Arguments {
+		arguments = append(arguments, strings.TrimSpace(node.String()))
+	}
+
+	out.WriteString("(")
+	out.WriteString(strings.Join(arguments, ","))
+	out.WriteString(")\n")
 
 	return out.String()
 }

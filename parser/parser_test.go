@@ -417,11 +417,11 @@ func TestParseFunction(t *testing.T) {
 	}{
 		{
 			Expression:   "fn () {}",
-			ExpectedNode: &ast.Function{},
+			ExpectedNode: &ast.FunctionDefinition{},
 		},
 		{
 			Expression: "fn () {return 10;}",
-			ExpectedNode: &ast.Function{
+			ExpectedNode: &ast.FunctionDefinition{
 				Body: []ast.Node{
 					&ast.ReturnStatement{
 						Expression: &ast.IntegerLiteral{Value: 10},
@@ -431,7 +431,7 @@ func TestParseFunction(t *testing.T) {
 		},
 		{
 			Expression: "fn foo() {return 10;}",
-			ExpectedNode: &ast.Function{
+			ExpectedNode: &ast.FunctionDefinition{
 				Name: "foo",
 				Body: []ast.Node{
 					&ast.ReturnStatement{
@@ -442,7 +442,7 @@ func TestParseFunction(t *testing.T) {
 		},
 		{
 			Expression: "fn foo(a, b, c) {return 10;}",
-			ExpectedNode: &ast.Function{
+			ExpectedNode: &ast.FunctionDefinition{
 				Name: "foo",
 				Parameters: []ast.Node{
 					&ast.Identifier{Name: "a"},
@@ -501,6 +501,34 @@ func TestParseFunction(t *testing.T) {
 
 		if !cmp.Equal(program.Statements[0], tt.ExpectedNode) {
 			t.Errorf("expected %s, instead got %s\n", tt.ExpectedNode, program.Statements[0])
+		}
+	}
+}
+
+func TestParseArguments(t *testing.T) {
+	tests := []struct {
+		Expression   string
+		ExpectedNode []ast.Node
+	}{
+		{
+			Expression: "(1+2, a,)",
+			ExpectedNode: []ast.Node{
+				&ast.InfixExpression{
+					Left:     &ast.IntegerLiteral{Value: 1},
+					Operator: token.Token{Type: token.PLUS, Literal: "+"},
+					Right:    &ast.IntegerLiteral{Value: 2},
+				},
+				&ast.Identifier{Name: "a"},
+			},
+		},
+	}
+
+	for _, tt := range tests {
+		l := lexer.New(tt.Expression)
+		p := New(&l)
+		arguments := p.parseArguments()
+		if !cmp.Equal(arguments, tt.ExpectedNode) {
+			t.Errorf("expected %s, instead got %s\n", tt.ExpectedNode, arguments)
 		}
 	}
 }
