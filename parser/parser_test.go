@@ -521,9 +521,43 @@ func TestParseArguments(t *testing.T) {
 				&ast.Identifier{Name: "a"},
 			},
 		},
+		{
+			Expression: "(1+2, 1+2*3)",
+			ExpectedNode: []ast.Node{
+				&ast.InfixExpression{
+					Left:     &ast.IntegerLiteral{Value: 1},
+					Operator: token.Token{Type: token.PLUS, Literal: "+"},
+					Right:    &ast.IntegerLiteral{Value: 2},
+				},
+				&ast.InfixExpression{
+					Left:     &ast.IntegerLiteral{Value: 1},
+					Operator: token.Token{Type: token.PLUS, Literal: "+"},
+					Right: &ast.InfixExpression{
+						Left:     &ast.IntegerLiteral{Value: 2},
+						Operator: token.Token{Type: token.ASTERISK, Literal: "*"},
+						Right:    &ast.IntegerLiteral{Value: 3},
+					},
+				},
+			},
+		},
+		{
+			Expression: "(1+2, !true)",
+			ExpectedNode: []ast.Node{
+				&ast.InfixExpression{
+					Left:     &ast.IntegerLiteral{Value: 1},
+					Operator: token.Token{Type: token.PLUS, Literal: "+"},
+					Right:    &ast.IntegerLiteral{Value: 2},
+				},
+				&ast.PrefixExpression{
+					Prefix: token.Token{Type: token.BANG, Literal: "!"},
+					Value:  &ast.BooleanLiteral{Value: true},
+				},
+			},
+		},
 	}
 
 	for _, tt := range tests {
+		t.Logf("parsing: %s\n", tt.Expression)
 		l := lexer.New(tt.Expression)
 		p := New(&l)
 		arguments := p.parseArguments()

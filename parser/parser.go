@@ -4,6 +4,7 @@ import (
 	"maz-lang/ast"
 	"maz-lang/lexer"
 	"maz-lang/token"
+	"slices"
 	"strconv"
 )
 
@@ -165,13 +166,13 @@ func (p *Parser) parseExpression(precedence int, endTokens ...token.TokenType) a
 
 	left := prefixFn()
 
-	for _, end := range endTokens {
-		if p.peekTokenIs(end) {
-			return left
-		}
-	}
+	// for _, end := range endTokens {
+	// 	if p.peekTokenIs(end) {
+	// 		return left
+	// 	}
+	// }
 
-	for precedence < p.peekPrecedence {
+	for precedence < p.peekPrecedence && !slices.Contains(endTokens, p.peekToken.Type) {
 		p.nextToken()
 		infixFn, ok := p.infixFns[p.curToken.Type]
 		if !ok {
@@ -196,7 +197,7 @@ func (p *Parser) parseExpression(precedence int, endTokens ...token.TokenType) a
 func (p *Parser) parsePrefixExpression() ast.Node {
 	prefix := p.curToken
 	p.nextToken()
-	expression := p.parseExpression(PREFIX, token.EOF)
+	expression := p.parseExpression(PREFIX, token.EOF, token.SEMICOLON, token.COMMA, token.RPAREN)
 	node := ast.PrefixExpression{Prefix: prefix, Value: expression}
 
 	return &node
@@ -237,7 +238,14 @@ func (p *Parser) parseBooleanLiteral() ast.Node {
 }
 
 func (p *Parser) parseIdentifier() ast.Node {
-	return &ast.Identifier{Name: p.curToken.Literal}
+	name := p.curToken.Literal
+	if p.peekTokenIs(token.LPAREN) {
+		p.nextToken()
+		args := p.parseArguments()
+		return &ast.FunctionCall{Name: name, Arguments: args}
+	}
+
+	return &ast.Identifier{Name: name}
 }
 
 func (p *Parser) parseLetStatement() ast.Node {
@@ -274,7 +282,6 @@ func (p *Parser) parseLetStatement() ast.Node {
 	return &ast.LetStatement{Ident: ident, Value: exp}
 }
 
-// FIXME: make assertions about peekToken and return errors
 func (p *Parser) parseIfStatement() ast.Node {
 	node := ast.IfStatement{}
 

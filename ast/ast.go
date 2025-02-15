@@ -31,7 +31,7 @@ type PrefixExpression struct {
 }
 
 func (pe *PrefixExpression) String() string {
-	return fmt.Sprintf("(%s%s)\n", pe.Prefix.Literal, pe.Value.String())
+	return fmt.Sprintf("(%s%s)\n", pe.Prefix.Literal, strings.TrimSpace(pe.Value.String()))
 }
 
 type InfixExpression struct {
