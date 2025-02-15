@@ -144,6 +144,21 @@ func TestParseExpression(t *testing.T) {
 			},
 		},
 		{
+			Expression: "foo(a) * 5 + 1",
+			ExpectedNode: &ast.InfixExpression{
+				Left: &ast.InfixExpression{
+					Left: &ast.FunctionCall{
+						Name:      "foo",
+						Arguments: []ast.Node{&ast.Identifier{Name: "a"}},
+					},
+					Operator: token.Token{Type: token.ASTERISK, Literal: "*"},
+					Right:    &ast.IntegerLiteral{Value: 5},
+				},
+				Operator: token.Token{Type: token.PLUS, Literal: "+"},
+				Right:    &ast.IntegerLiteral{Value: 1},
+			},
+		},
+		{
 			Expression: "(5+1",
 			ExpectedNode: &ast.SyntaxError{
 				Msg:   ErrUnexpectedParenthesis,

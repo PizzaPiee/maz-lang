@@ -197,6 +197,10 @@ func (p *Parser) parseExpression(precedence int, endTokens ...token.TokenType) a
 func (p *Parser) parsePrefixExpression() ast.Node {
 	prefix := p.curToken
 	p.nextToken()
+	// NOTE: Well you see how parsePrefixExpression() is being called here? Like it? neither do I.
+	// This is like this due to a bug I found and will stay like this until I find the will to think
+	// of a better solution. I actually know what is the best way to fix this but this is just way
+	// easier so we will stick with this.
 	expression := p.parseExpression(PREFIX, token.EOF, token.SEMICOLON, token.COMMA, token.RPAREN)
 	node := ast.PrefixExpression{Prefix: prefix, Value: expression}
 
