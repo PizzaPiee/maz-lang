@@ -62,7 +62,7 @@ type Parser struct {
 }
 
 type PrefixFn func() ast.Node
-type InfixFn func(left ast.Node) ast.Node
+type InfixFn func(left ast.Node, end token.TokenType) ast.Node
 
 func New(lexer *lexer.Lexer) *Parser {
 	p := &Parser{
@@ -82,6 +82,7 @@ func New(lexer *lexer.Lexer) *Parser {
 	p.registerPrefixFn(token.LET, p.parseLetStatement)
 	p.registerPrefixFn(token.IDENT, p.parseIdentifier)
 	p.registerPrefixFn(token.IF, p.parseIfStatement)
+	p.registerPrefixFn(token.RETURN, p.parseReturnStatement)
 
 	p.registerInfixFn(token.PLUS, p.parseInfixExpression)
 	p.registerInfixFn(token.MINUS, p.parseInfixExpression)
@@ -176,7 +177,7 @@ func (p *Parser) parseExpression(precedence int, end token.TokenType) ast.Node {
 			break
 		}
 
-		left = infixFn(left)
+		left = infixFn(left, end)
 	}
 
 	if openParen != 0 {
@@ -196,10 +197,10 @@ func (p *Parser) parsePrefixExpression() ast.Node {
 	return &node
 }
 
-func (p *Parser) parseInfixExpression(left ast.Node) ast.Node {
+func (p *Parser) parseInfixExpression(left ast.Node, end token.TokenType) ast.Node {
 	node := ast.InfixExpression{Left: left, Operator: p.curToken}
 	p.nextToken()
-	node.Right = p.parseExpression(precedences[node.Operator.Type], token.EOF)
+	node.Right = p.parseExpression(precedences[node.Operator.Type], end)
 
 	if p.isError(node.Right) {
 		return node.Right
@@ -348,4 +349,29 @@ func (p *Parser) parseIfStatement() ast.Node {
 	node.ElseIfs = elseIfs
 
 	return &node
+}
+
+func (p *Parser) parseReturnStatement() ast.Node {
+	if p.peekTokenIs(token.SEMICOLON) {
+		return &ast.SyntaxError{Msg: ErrExpectedExpression, Token: p.curToken}
+	}
+
+	p.nextToken()
+	node := ast.ReturnStatement{}
+	node.Expression = p.parseExpression(LOWEST, token.SEMICOLON)
+
+	if !p.peekTokenIs(token.SEMICOLON) {
+		return &ast.SyntaxError{Msg: ErrMissingSemicolon, Token: p.curToken}
+	}
+	p.nextToken()
+
+	return &node
+}
+
+func (p *Parser) parseFunction() ast.Node {
+	// Check if it is a named function or an anonymous one
+	// Parse the parameters of the function
+	// Parse the body of the function
+
+	return &ast.Function{}
 }

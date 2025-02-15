@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"fmt"
 	"maz-lang/token"
+	"strings"
 )
 
 type Node interface {
@@ -30,7 +31,7 @@ type PrefixExpression struct {
 }
 
 func (pe *PrefixExpression) String() string {
-	return fmt.Sprintf("(%s%s)", pe.Prefix.Literal, pe.Value.String())
+	return fmt.Sprintf("(%s%s)\n", pe.Prefix.Literal, pe.Value.String())
 }
 
 type InfixExpression struct {
@@ -40,20 +41,20 @@ type InfixExpression struct {
 }
 
 func (ie *InfixExpression) String() string {
-	return fmt.Sprintf("(%s %s %s)", ie.Left.String(), ie.Operator.Literal, ie.Right.String())
+	return fmt.Sprintf("(%s %s %s)\n", ie.Left.String(), ie.Operator.Literal, ie.Right.String())
 }
 
 type IntegerLiteral struct {
 	Value int64
 }
 
-func (il *IntegerLiteral) String() string { return fmt.Sprintf("%d", il.Value) }
+func (il *IntegerLiteral) String() string { return fmt.Sprintf("%d\n", il.Value) }
 
 type BooleanLiteral struct {
 	Value bool
 }
 
-func (bl *BooleanLiteral) String() string { return fmt.Sprintf("%v", bl.Value) }
+func (bl *BooleanLiteral) String() string { return fmt.Sprintf("%v\n", bl.Value) }
 
 type SyntaxError struct {
 	Msg   string
@@ -61,7 +62,7 @@ type SyntaxError struct {
 }
 
 func (se *SyntaxError) String() string {
-	return fmt.Sprintf("Syntax error: %s\nError near: %s", se.Msg, se.Token.Literal)
+	return fmt.Sprintf("\nSyntax error: %s\nError near: '%s'\n", se.Msg, se.Token.Literal)
 }
 
 func (se *SyntaxError) Error() string { return se.String() }
@@ -72,14 +73,14 @@ type LetStatement struct {
 }
 
 func (ls *LetStatement) String() string {
-	return fmt.Sprintf("let %s = %s;", ls.Ident, ls.Value.String())
+	return fmt.Sprintf("let %s = %s;\n", ls.Ident, ls.Value.String())
 }
 
 type Identifier struct {
 	Name string
 }
 
-func (id *Identifier) String() string { return id.Name }
+func (id *Identifier) String() string { return id.Name + "\n" }
 
 type IfStatement struct {
 	MainCondition  Node
@@ -127,4 +128,41 @@ func (ei *ElseIf) String() string {
 	buffer.WriteString("}")
 
 	return buffer.String()
+}
+
+type ReturnStatement struct {
+	Expression Node
+}
+
+func (rs *ReturnStatement) String() string {
+	return fmt.Sprintf("return %s;\n", rs.Expression.String())
+}
+
+type Function struct {
+	Name       string
+	Parameters []Identifier
+	Body       []Node
+}
+
+func (f *Function) String() string {
+	var out bytes.Buffer
+
+	out.WriteString("fn ")
+	if f.Name != "" {
+		out.WriteString(f.Name)
+	}
+
+	var params []string
+	for _, p := range f.Parameters {
+		params = append(params, p.String())
+	}
+	out.WriteString(strings.Join(params, ","))
+
+	out.WriteString("{\n")
+	for _, stmt := range f.Body {
+		out.WriteString("\t" + stmt.String())
+	}
+	out.WriteString("}\n")
+
+	return out.String()
 }

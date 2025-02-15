@@ -52,6 +52,7 @@ func TestParsePrefixExpression(t *testing.T) {
 	}
 
 	for _, tt := range tests {
+		t.Logf("parsing: '%s'\n", tt.Expression)
 		l := lexer.New(tt.Expression)
 		p := New(&l)
 		program := p.Parse(token.EOF)
@@ -173,6 +174,7 @@ func TestParseExpression(t *testing.T) {
 	}
 
 	for _, tt := range tests {
+		t.Logf("parsing: '%s'\n", tt.Expression)
 		l := lexer.New(tt.Expression)
 		p := New(&l)
 		program := p.Parse(token.EOF)
@@ -277,6 +279,7 @@ func TestParseLetStatement(t *testing.T) {
 	}
 
 	for _, tt := range tests {
+		t.Logf("parsing: '%s'\n", tt.Expression)
 		l := lexer.New(tt.Expression)
 		p := New(&l)
 		program := p.Parse(token.EOF)
@@ -337,26 +340,27 @@ func TestParseIfStatement(t *testing.T) {
 			},
 		},
 		{
-			Expression:   "if ",
+			Expression: "if ",
 			ExpectedNode: &ast.SyntaxError{
-				Msg: ErrExpectedExpression, Token: token.Token{Type: token.EOF, Literal: ""}
+				Msg: ErrExpectedExpression, Token: token.Token{Type: token.EOF, Literal: ""},
 			},
 		},
 		{
-			Expression:   "if a > b ",
+			Expression: "if a > b ",
 			ExpectedNode: &ast.SyntaxError{
-				Msg: ErrExpectedBlock, Token: token.Token{Type: token.EOF, Literal: ""}
+				Msg: ErrExpectedBlock, Token: token.Token{Type: token.IDENT, Literal: "b"},
 			},
 		},
 		{
 			Expression: "if a > b { let a = 5;",
 			ExpectedNode: &ast.SyntaxError{
-				Msg: ErrExpectedExpression, Token: token.Token{Type: token.EOF, Literal: ""}
+				Msg: ErrExpectedExpression, Token: token.Token{Type: token.EOF, Literal: ""},
 			},
-		}
+		},
 	}
 
 	for _, tt := range tests {
+		t.Logf("parsing: '%s'\n", tt.Expression)
 		l := lexer.New(tt.Expression)
 		p := New(&l)
 		program := p.Parse(token.EOF)
@@ -365,5 +369,43 @@ func TestParseIfStatement(t *testing.T) {
 			t.Errorf("expected %s, instead got %s\n", tt.ExpectedNode, program.Statements[0])
 		}
 	}
+}
 
+func TestParseReturnStatement(t *testing.T) {
+	tests := []struct {
+		Expression   string
+		ExpectedNode ast.Node
+	}{
+		{
+			Expression: "return 5;",
+			ExpectedNode: &ast.ReturnStatement{
+				Expression: &ast.IntegerLiteral{Value: 5},
+			},
+		},
+		{
+			Expression: "return 5",
+			ExpectedNode: &ast.SyntaxError{
+				Msg:   ErrMissingSemicolon,
+				Token: token.Token{Type: token.INT, Literal: "5"},
+			},
+		},
+		{
+			Expression: "return ;",
+			ExpectedNode: &ast.SyntaxError{
+				Msg:   ErrExpectedExpression,
+				Token: token.Token{Type: token.RETURN, Literal: "return"},
+			},
+		},
+	}
+
+	for _, tt := range tests {
+		t.Logf("parsing: '%s'\n", tt.Expression)
+		l := lexer.New(tt.Expression)
+		p := New(&l)
+		program := p.Parse(token.EOF)
+
+		if !cmp.Equal(program.Statements[0], tt.ExpectedNode) {
+			t.Errorf("expected %s, instead got %s\n", tt.ExpectedNode, program.Statements[0])
+		}
+	}
 }
