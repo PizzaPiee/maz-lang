@@ -19,14 +19,15 @@ const (
 )
 
 const (
-	ErrUnexpectedParenthesis = "unexpected parenthesis"
-	ErrCannotParseToken      = "cannot parse current token"
-	ErrExpectedIdentifier    = "expected next token to be an identifier"
-	ErrExpectedAssignment    = "expected assignment"
-	ErrMissingSemicolon      = "missing semicolon"
-	ErrExpectedExpression    = "expected expression"
-	ErrExpectedBlock         = "expected block"
-	ErrExpectedParenthesis   = "expected parenthesis"
+	ErrUnexpectedParenthesis     = "unexpected parenthesis"
+	ErrCannotParseToken          = "cannot parse current token"
+	ErrExpectedIdentifier        = "expected next token to be an identifier"
+	ErrExpectedAssignment        = "expected assignment"
+	ErrMissingSemicolon          = "missing semicolon"
+	ErrExpectedExpression        = "expected expression"
+	ErrExpectedBlock             = "expected block"
+	ErrExpectedParenthesis       = "expected parenthesis"
+	ErrInvalidFunctionParameters = "function has invalid parameters"
 )
 
 var precedences = map[token.TokenType]int{
@@ -84,7 +85,7 @@ func New(lexer *lexer.Lexer) *Parser {
 	p.registerPrefixFn(token.IDENT, p.parseIdentifier)
 	p.registerPrefixFn(token.IF, p.parseIfStatement)
 	p.registerPrefixFn(token.RETURN, p.parseReturnStatement)
-	p.registerPrefixFn(token.FUNCTION, p.parseFunction)
+	p.registerPrefixFn(token.FUNCTION, p.parseFunctionDefinition)
 
 	p.registerInfixFn(token.PLUS, p.parseInfixExpression)
 	p.registerInfixFn(token.MINUS, p.parseInfixExpression)
@@ -370,7 +371,7 @@ func (p *Parser) parseReturnStatement() ast.Node {
 	return &node
 }
 
-func (p *Parser) parseFunction() ast.Node {
+func (p *Parser) parseFunctionDefinition() ast.Node {
 	node := ast.Function{}
 
 	// Check if it is a named function or an anonymous one
@@ -385,8 +386,12 @@ func (p *Parser) parseFunction() ast.Node {
 	}
 	p.nextToken()
 
-	for !p.peekTokenIs(token.RPAREN) || p.peekTokenIs(token.IDENT) {
+	for !p.peekTokenIs(token.RPAREN) {
+		if !p.peekTokenIs(token.IDENT) {
+			return &ast.SyntaxError{Msg: ErrInvalidFunctionParameters, Token: p.curToken}
+		}
 		p.nextToken()
+
 		param := p.parseIdentifier()
 		node.Parameters = append(node.Parameters, param)
 		if p.peekTokenIs(token.COMMA) {

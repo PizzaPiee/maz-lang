@@ -409,3 +409,98 @@ func TestParseReturnStatement(t *testing.T) {
 		}
 	}
 }
+
+func TestParseFunction(t *testing.T) {
+	tests := []struct {
+		Expression   string
+		ExpectedNode ast.Node
+	}{
+		{
+			Expression:   "fn () {}",
+			ExpectedNode: &ast.Function{},
+		},
+		{
+			Expression: "fn () {return 10;}",
+			ExpectedNode: &ast.Function{
+				Body: []ast.Node{
+					&ast.ReturnStatement{
+						Expression: &ast.IntegerLiteral{Value: 10},
+					},
+				},
+			},
+		},
+		{
+			Expression: "fn foo() {return 10;}",
+			ExpectedNode: &ast.Function{
+				Name: "foo",
+				Body: []ast.Node{
+					&ast.ReturnStatement{
+						Expression: &ast.IntegerLiteral{Value: 10},
+					},
+				},
+			},
+		},
+		{
+			Expression: "fn foo(a, b, c) {return 10;}",
+			ExpectedNode: &ast.Function{
+				Name: "foo",
+				Parameters: []ast.Node{
+					&ast.Identifier{Name: "a"},
+					&ast.Identifier{Name: "b"},
+					&ast.Identifier{Name: "c"},
+				},
+				Body: []ast.Node{
+					&ast.ReturnStatement{
+						Expression: &ast.IntegerLiteral{Value: 10},
+					},
+				},
+			},
+		},
+		{
+			Expression: "fn",
+			ExpectedNode: &ast.SyntaxError{
+				Msg:   ErrExpectedParenthesis,
+				Token: token.Token{Type: token.FUNCTION, Literal: "fn"},
+			},
+		},
+		{
+			Expression: "fn (a, b",
+			ExpectedNode: &ast.SyntaxError{
+				Msg:   ErrInvalidFunctionParameters,
+				Token: token.Token{Type: token.IDENT, Literal: "b"},
+			},
+		},
+		{
+			Expression: "fn (a,, b)",
+			ExpectedNode: &ast.SyntaxError{
+				Msg:   ErrInvalidFunctionParameters,
+				Token: token.Token{Type: token.COMMA, Literal: ","},
+			},
+		},
+		{
+			Expression: "fn (a, b)",
+			ExpectedNode: &ast.SyntaxError{
+				Msg:   ErrExpectedBlock,
+				Token: token.Token{Type: token.RPAREN, Literal: ")"},
+			},
+		},
+		{
+			Expression: "fn (a, b) {",
+			ExpectedNode: &ast.SyntaxError{
+				Msg:   ErrExpectedExpression,
+				Token: token.Token{Type: token.EOF, Literal: ""},
+			},
+		},
+	}
+
+	for _, tt := range tests {
+		t.Logf("parsing: %s\n", tt.Expression)
+		l := lexer.New(tt.Expression)
+		p := New(&l)
+		program := p.Parse(token.EOF)
+
+		if !cmp.Equal(program.Statements[0], tt.ExpectedNode) {
+			t.Errorf("expected %s, instead got %s\n", tt.ExpectedNode, program.Statements[0])
+		}
+	}
+}

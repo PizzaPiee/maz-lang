@@ -137,7 +137,7 @@ type ReturnStatement struct {
 }
 
 func (rs *ReturnStatement) String() string {
-	return fmt.Sprintf("return %s;\n", rs.Expression.String())
+	return fmt.Sprintf("return %s;\n", strings.TrimSpace(rs.Expression.String()))
 }
 
 type Function struct {
