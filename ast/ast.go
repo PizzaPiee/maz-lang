@@ -41,7 +41,9 @@ type InfixExpression struct {
 }
 
 func (ie *InfixExpression) String() string {
-	return fmt.Sprintf("(%s %s %s)\n", ie.Left.String(), ie.Operator.Literal, ie.Right.String())
+	left := strings.TrimSpace(ie.Left.String())
+	right := strings.TrimSpace(ie.Right.String())
+	return fmt.Sprintf("(%s %s %s)\n", left, ie.Operator.Literal, right)
 }
 
 type IntegerLiteral struct {
@@ -73,7 +75,7 @@ type LetStatement struct {
 }
 
 func (ls *LetStatement) String() string {
-	return fmt.Sprintf("let %s = %s;\n", ls.Ident, ls.Value.String())
+	return fmt.Sprintf("let %s = %s;\n", ls.Ident, strings.Trim(ls.Value.String(), "\n"))
 }
 
 type Identifier struct {
@@ -140,7 +142,7 @@ func (rs *ReturnStatement) String() string {
 
 type Function struct {
 	Name       string
-	Parameters []Identifier
+	Parameters []Node
 	Body       []Node
 }
 
@@ -154,9 +156,11 @@ func (f *Function) String() string {
 
 	var params []string
 	for _, p := range f.Parameters {
-		params = append(params, p.String())
+		params = append(params, strings.TrimSpace(p.String()))
 	}
+	out.WriteString("(")
 	out.WriteString(strings.Join(params, ","))
+	out.WriteString(") ")
 
 	out.WriteString("{\n")
 	for _, stmt := range f.Body {

@@ -26,6 +26,7 @@ const (
 	ErrMissingSemicolon      = "missing semicolon"
 	ErrExpectedExpression    = "expected expression"
 	ErrExpectedBlock         = "expected block"
+	ErrExpectedParenthesis   = "expected parenthesis"
 )
 
 var precedences = map[token.TokenType]int{
@@ -83,6 +84,7 @@ func New(lexer *lexer.Lexer) *Parser {
 	p.registerPrefixFn(token.IDENT, p.parseIdentifier)
 	p.registerPrefixFn(token.IF, p.parseIfStatement)
 	p.registerPrefixFn(token.RETURN, p.parseReturnStatement)
+	p.registerPrefixFn(token.FUNCTION, p.parseFunction)
 
 	p.registerInfixFn(token.PLUS, p.parseInfixExpression)
 	p.registerInfixFn(token.MINUS, p.parseInfixExpression)
@@ -369,9 +371,44 @@ func (p *Parser) parseReturnStatement() ast.Node {
 }
 
 func (p *Parser) parseFunction() ast.Node {
-	// Check if it is a named function or an anonymous one
-	// Parse the parameters of the function
-	// Parse the body of the function
+	node := ast.Function{}
 
-	return &ast.Function{}
+	// Check if it is a named function or an anonymous one
+	if p.peekTokenIs(token.IDENT) {
+		p.nextToken()
+		node.Name = p.curToken.Literal
+	}
+
+	// Parse the parameters of the function
+	if !p.peekTokenIs(token.LPAREN) {
+		return &ast.SyntaxError{Msg: ErrExpectedParenthesis, Token: p.curToken}
+	}
+	p.nextToken()
+
+	for !p.peekTokenIs(token.RPAREN) || p.peekTokenIs(token.IDENT) {
+		p.nextToken()
+		param := p.parseIdentifier()
+		node.Parameters = append(node.Parameters, param)
+		if p.peekTokenIs(token.COMMA) {
+			p.nextToken()
+		}
+	}
+	p.nextToken()
+
+	// Parse the body of the function
+	if !p.peekTokenIs(token.LBRACE) {
+		return &ast.SyntaxError{Msg: ErrExpectedBlock, Token: p.curToken}
+	}
+	p.nextToken()
+	p.nextToken()
+
+	body := p.Parse(token.RBRACE)
+	for _, stmt := range body.Statements {
+		if p.isError(stmt) {
+			return stmt
+		}
+	}
+	node.Body = body.Statements
+
+	return &node
 }
