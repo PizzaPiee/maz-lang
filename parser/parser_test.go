@@ -431,12 +431,13 @@ func TestParseFunction(t *testing.T) {
 		ExpectedNode ast.Node
 	}{
 		{
-			Expression:   "fn () {}",
-			ExpectedNode: &ast.FunctionDefinition{},
+			Expression:   "fn foo() {}",
+			ExpectedNode: &ast.FunctionDefinition{Name: "foo"},
 		},
 		{
-			Expression: "fn () {return 10;}",
+			Expression: "fn foo() {return 10;}",
 			ExpectedNode: &ast.FunctionDefinition{
+				Name: "foo",
 				Body: []ast.Node{
 					&ast.ReturnStatement{
 						Expression: &ast.IntegerLiteral{Value: 10},
@@ -474,36 +475,43 @@ func TestParseFunction(t *testing.T) {
 		{
 			Expression: "fn",
 			ExpectedNode: &ast.SyntaxError{
-				Msg:   ErrExpectedParenthesis,
+				Msg:   ErrExpectedIdentifier,
 				Token: token.Token{Type: token.FUNCTION, Literal: "fn"},
 			},
 		},
 		{
-			Expression: "fn (a, b",
+			Expression: "fn foo(a, b",
 			ExpectedNode: &ast.SyntaxError{
 				Msg:   ErrInvalidFunctionParameters,
 				Token: token.Token{Type: token.IDENT, Literal: "b"},
 			},
 		},
 		{
-			Expression: "fn (a,, b)",
+			Expression: "fn foo(a,, b)",
 			ExpectedNode: &ast.SyntaxError{
 				Msg:   ErrInvalidFunctionParameters,
 				Token: token.Token{Type: token.COMMA, Literal: ","},
 			},
 		},
 		{
-			Expression: "fn (a, b)",
+			Expression: "fn foo(a, b)",
 			ExpectedNode: &ast.SyntaxError{
 				Msg:   ErrExpectedBlock,
 				Token: token.Token{Type: token.RPAREN, Literal: ")"},
 			},
 		},
 		{
-			Expression: "fn (a, b) {",
+			Expression: "fn foo(a, b) {",
 			ExpectedNode: &ast.SyntaxError{
 				Msg:   ErrExpectedExpression,
 				Token: token.Token{Type: token.EOF, Literal: ""},
+			},
+		},
+		{
+			Expression: "fn foo(a, b())",
+			ExpectedNode: &ast.SyntaxError{
+				Msg:   ErrInvalidFunctionParameters,
+				Token: token.Token{Type: token.RPAREN, Literal: ")"},
 			},
 		},
 	}

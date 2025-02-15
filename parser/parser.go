@@ -166,12 +166,6 @@ func (p *Parser) parseExpression(precedence int, endTokens ...token.TokenType) a
 
 	left := prefixFn()
 
-	// for _, end := range endTokens {
-	// 	if p.peekTokenIs(end) {
-	// 		return left
-	// 	}
-	// }
-
 	for precedence < p.peekPrecedence && !slices.Contains(endTokens, p.peekToken.Type) {
 		p.nextToken()
 		infixFn, ok := p.infixFns[p.curToken.Type]
@@ -241,6 +235,10 @@ func (p *Parser) parseBooleanLiteral() ast.Node {
 	return &ast.BooleanLiteral{Value: false}
 }
 
+// This function does not simply parse an Identifier.
+// It acts as a gateway to the operations that can happen after an identifier.
+// You can reference an identifier, assign a new value to it or maybe
+// the identifier refers to the name of a function you are calling.
 func (p *Parser) parseIdentifier() ast.Node {
 	name := p.curToken.Literal
 	if p.peekTokenIs(token.LPAREN) {
@@ -387,11 +385,12 @@ func (p *Parser) parseReturnStatement() ast.Node {
 func (p *Parser) parseFunctionDefinition() ast.Node {
 	node := ast.FunctionDefinition{}
 
-	// Check if it is a named function or an anonymous one
-	if p.peekTokenIs(token.IDENT) {
-		p.nextToken()
-		node.Name = p.curToken.Literal
+	// Parse the function's name
+	if !p.peekTokenIs(token.IDENT) {
+		return &ast.SyntaxError{Msg: ErrExpectedIdentifier, Token: p.curToken}
 	}
+	p.nextToken()
+	node.Name = p.curToken.Literal
 
 	// Parse the parameters of the function
 	if !p.peekTokenIs(token.LPAREN) {
@@ -406,7 +405,15 @@ func (p *Parser) parseFunctionDefinition() ast.Node {
 		p.nextToken()
 
 		param := p.parseIdentifier()
-		node.Parameters = append(node.Parameters, param)
+
+		switch param.(type) {
+		case *ast.Identifier:
+			node.Parameters = append(node.Parameters, param)
+		default:
+			openParen++
+			return &ast.SyntaxError{Msg: ErrInvalidFunctionParameters, Token: p.curToken}
+		}
+
 		if p.peekTokenIs(token.COMMA) {
 			p.nextToken()
 		}
