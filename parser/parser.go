@@ -64,7 +64,7 @@ type Parser struct {
 }
 
 type PrefixFn func() ast.Node
-type InfixFn func(left ast.Node, end token.TokenType) ast.Node
+type InfixFn func(left ast.Node, endTokens ...token.TokenType) ast.Node
 
 func New(lexer *lexer.Lexer) *Parser {
 	p := &Parser{
@@ -156,7 +156,7 @@ func (p *Parser) isError(node ast.Node) bool {
 	return false
 }
 
-func (p *Parser) parseExpression(precedence int, end token.TokenType) ast.Node {
+func (p *Parser) parseExpression(precedence int, endTokens ...token.TokenType) ast.Node {
 	tok := p.curToken
 	prefixFn, ok := p.prefixFns[tok.Type]
 	if !ok {
@@ -165,8 +165,10 @@ func (p *Parser) parseExpression(precedence int, end token.TokenType) ast.Node {
 
 	left := prefixFn()
 
-	if p.peekTokenIs(end) {
-		return left
+	for _, end := range endTokens {
+		if p.peekTokenIs(end) {
+			return left
+		}
 	}
 
 	for precedence < p.peekPrecedence {
@@ -180,7 +182,7 @@ func (p *Parser) parseExpression(precedence int, end token.TokenType) ast.Node {
 			break
 		}
 
-		left = infixFn(left, end)
+		left = infixFn(left, endTokens...)
 	}
 
 	if openParen != 0 {
@@ -200,10 +202,10 @@ func (p *Parser) parsePrefixExpression() ast.Node {
 	return &node
 }
 
-func (p *Parser) parseInfixExpression(left ast.Node, end token.TokenType) ast.Node {
+func (p *Parser) parseInfixExpression(left ast.Node, endTokens ...token.TokenType) ast.Node {
 	node := ast.InfixExpression{Left: left, Operator: p.curToken}
 	p.nextToken()
-	node.Right = p.parseExpression(precedences[node.Operator.Type], end)
+	node.Right = p.parseExpression(precedences[node.Operator.Type], endTokens...)
 
 	if p.isError(node.Right) {
 		return node.Right
@@ -423,7 +425,7 @@ func (p *Parser) parseArguments() []ast.Node {
 
 	for !p.peekTokenIs(token.RPAREN) {
 		p.nextToken()
-		arg := p.parseExpression(LOWEST, token.COMMA)
+		arg := p.parseExpression(LOWEST, token.COMMA, token.RPAREN)
 		node = append(node, arg)
 		if p.peekTokenIs(token.COMMA) {
 			p.nextToken()

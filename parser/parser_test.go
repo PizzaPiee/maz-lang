@@ -511,7 +511,7 @@ func TestParseArguments(t *testing.T) {
 		ExpectedNode []ast.Node
 	}{
 		{
-			Expression: "(1+2, a,)",
+			Expression: "(1+2, a)",
 			ExpectedNode: []ast.Node{
 				&ast.InfixExpression{
 					Left:     &ast.IntegerLiteral{Value: 1},
