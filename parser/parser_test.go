@@ -104,6 +104,18 @@ func TestParseExpression(t *testing.T) {
 			},
 		},
 		{
+			Expression: "(5+(5+1))",
+			ExpectedNode: &ast.InfixExpression{
+				Left:     &ast.IntegerLiteral{Value: 5},
+				Operator: token.Token{Type: token.PLUS, Literal: "+"},
+				Right: &ast.InfixExpression{
+					Left:     &ast.IntegerLiteral{Value: 5},
+					Operator: token.Token{Type: token.PLUS, Literal: "+"},
+					Right:    &ast.IntegerLiteral{Value: 1},
+				},
+			},
+		},
+		{
 			Expression: "foo+bar",
 			ExpectedNode: &ast.InfixExpression{
 				Left:     &ast.Identifier{Name: "foo"},
