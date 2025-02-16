@@ -122,12 +122,18 @@ func (p *Parser) Parse(end token.TokenType) ast.Program {
 		}
 
 		node := p.parseExpression(LOWEST, end)
-		program.Statements = append(program.Statements, node)
-
 		if p.isError(node) {
+			program.Statements = []ast.Node{node}
 			return program
 		}
 
+		if !p.checkOpenParen() {
+			err := &ast.SyntaxError{Msg: ErrUnexpectedParenthesis, Token: p.curToken}
+			program.Statements = []ast.Node{err}
+			return program
+		}
+
+		program.Statements = append(program.Statements, node)
 		p.nextToken()
 	}
 }
@@ -157,6 +163,14 @@ func (p *Parser) isError(node ast.Node) bool {
 	return false
 }
 
+func (p *Parser) checkOpenParen() bool {
+	if openParen != 0 {
+		openParen = 0
+		return false
+	}
+	return true
+}
+
 func (p *Parser) parseExpression(precedence int, endTokens ...token.TokenType) ast.Node {
 	tok := p.curToken
 	prefixFn, ok := p.prefixFns[tok.Type]
@@ -174,15 +188,11 @@ func (p *Parser) parseExpression(precedence int, endTokens ...token.TokenType) a
 			case token.RPAREN:
 				openParen--
 			}
+
 			break
 		}
 
 		left = infixFn(left, endTokens...)
-	}
-
-	if openParen != 0 {
-		openParen = 0
-		left = &ast.SyntaxError{Msg: ErrUnexpectedParenthesis, Token: p.curToken}
 	}
 
 	return left
@@ -217,6 +227,10 @@ func (p *Parser) parseParenExpression() ast.Node {
 	openParen++
 	p.nextToken()
 	node := p.parseExpression(LOWEST, token.EOF)
+
+	if !p.checkOpenParen() {
+		return &ast.SyntaxError{Msg: ErrUnexpectedParenthesis, Token: p.curToken}
+	}
 
 	return node
 }
@@ -280,6 +294,10 @@ func (p *Parser) parseLetStatement() ast.Node {
 	}
 
 	p.nextToken()
+
+	if !p.checkOpenParen() {
+		return &ast.SyntaxError{Msg: ErrUnexpectedParenthesis, Token: p.curToken}
+	}
 
 	return &ast.LetStatement{Ident: ident, Value: exp}
 }
