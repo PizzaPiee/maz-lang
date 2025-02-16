@@ -22,6 +22,9 @@ func Eval(node ast.Node) object.Object {
 			return &TRUE
 		}
 		return &FALSE
+	case *ast.PrefixExpression:
+		return EvalPrefixExpression(*node)
+
 	}
 
 	return nil
@@ -35,4 +38,23 @@ func EvalStatements(statements []ast.Node) object.Object {
 	}
 
 	return obj
+}
+
+func EvalPrefixExpression(node ast.PrefixExpression) object.Object {
+	obj := Eval(node.Value)
+
+	switch node.Prefix.Literal {
+	case "!":
+		switch obj := obj.(type) {
+		case *object.Boolean:
+			return &object.Boolean{Value: !obj.Value}
+		}
+	case "-":
+		switch obj := obj.(type) {
+		case *object.Integer:
+			return &object.Integer{Value: -obj.Value}
+		}
+	}
+
+	return nil
 }

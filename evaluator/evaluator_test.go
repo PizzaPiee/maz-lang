@@ -52,6 +52,38 @@ func TestEvalBooleanLiteral(t *testing.T) {
 	}
 
 	for _, tt := range tests {
+		t.Logf("evaluating '%s'\n", tt.Expression)
+		l := lexer.New(tt.Expression)
+		program := parser.New(&l).Parse(token.EOF)
+		obj := Eval(&program)
+
+		if !cmp.Equal(obj, tt.ExpectedObj) {
+			t.Errorf("expected object to be %+v, instead got %+v\n", tt.ExpectedObj, obj)
+		}
+	}
+}
+
+func TestEvalPrefixExpression(t *testing.T) {
+	tests := []struct {
+		Expression  string
+		ExpectedObj object.Object
+	}{
+		{
+			Expression:  "!true",
+			ExpectedObj: &object.Boolean{Value: false},
+		},
+		{
+			Expression:  "!false",
+			ExpectedObj: &object.Boolean{Value: true},
+		},
+		{
+			Expression:  "-10",
+			ExpectedObj: &object.Integer{Value: -10},
+		},
+	}
+
+	for _, tt := range tests {
+		t.Logf("evaluating '%s'\n", tt.Expression)
 		l := lexer.New(tt.Expression)
 		program := parser.New(&l).Parse(token.EOF)
 		obj := Eval(&program)
