@@ -35,3 +35,29 @@ func TestEvalIntegerLiteral(t *testing.T) {
 		}
 	}
 }
+
+func TestEvalBooleanLiteral(t *testing.T) {
+	tests := []struct {
+		Expression  string
+		ExpectedObj *object.Boolean
+	}{
+		{
+			Expression:  "true",
+			ExpectedObj: &object.Boolean{Value: true},
+		},
+		{
+			Expression:  "false",
+			ExpectedObj: &object.Boolean{Value: false},
+		},
+	}
+
+	for _, tt := range tests {
+		l := lexer.New(tt.Expression)
+		program := parser.New(&l).Parse(token.EOF)
+		obj := Eval(&program)
+
+		if !cmp.Equal(obj, tt.ExpectedObj) {
+			t.Errorf("expected object to be %+v, instead got %+v\n", tt.ExpectedObj, obj)
+		}
+	}
+}
