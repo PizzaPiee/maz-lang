@@ -3,7 +3,7 @@ package repl
 import (
 	"bufio"
 	"fmt"
-	// "maz-lang/evaluator"
+	"maz-lang/evaluator"
 	"maz-lang/lexer"
 	"maz-lang/parser"
 	"maz-lang/token"
@@ -21,9 +21,8 @@ func Run() {
 		l := lexer.New(input)
 		p := parser.New(&l)
 		program := p.Parse(token.EOF)
-		// obj := evaluator.Eval(&program)
-		// fmt.Printf("%s\n", obj.Inspect())
-		fmt.Println(program.String())
+		obj := evaluator.Eval(&program)
+		fmt.Printf("%s\n", obj.Inspect())
 	}
 }
 

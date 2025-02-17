@@ -93,3 +93,34 @@ func TestEvalPrefixExpression(t *testing.T) {
 		}
 	}
 }
+
+func TestEvalExpression(t *testing.T) {
+	tests := []struct {
+		Expression  string
+		ExpectedObj object.Object
+	}{
+		{
+			Expression:  "2+1*5",
+			ExpectedObj: &object.Integer{Value: 7},
+		},
+		{
+			Expression:  "(2*(1+5))-10",
+			ExpectedObj: &object.Integer{Value: 2},
+		},
+		{
+			Expression:  "((100+5)-(3*5))/5",
+			ExpectedObj: &object.Integer{Value: 18},
+		},
+	}
+
+	for _, tt := range tests {
+		t.Logf("evaluating: '%s'\n", tt.Expression)
+		l := lexer.New(tt.Expression)
+		p := parser.New(&l).Parse(token.EOF)
+		obj := Eval(&p)
+
+		if !cmp.Equal(obj, tt.ExpectedObj) {
+			t.Errorf("expected object to be %+v, instead got %+v\n", tt.ExpectedObj, obj)
+		}
+	}
+}
