@@ -16,7 +16,6 @@ const (
 	PRODUCT
 	PREFIX
 	PAREN
-	IDENT
 )
 
 const (
@@ -37,7 +36,6 @@ var precedences = map[token.TokenType]int{
 	token.ASTERISK: PRODUCT,
 	token.SLASH:    PRODUCT,
 	token.LPAREN:   PAREN,
-	token.IDENT:    IDENT,
 	token.EQ:       EQUAL,
 	token.GT:       EQUAL,
 	token.LT:       EQUAL,
