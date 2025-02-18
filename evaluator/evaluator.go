@@ -2,6 +2,7 @@ package evaluator
 
 import (
 	"maz-lang/ast"
+	"maz-lang/environment"
 	"maz-lang/object"
 )
 
@@ -11,10 +12,10 @@ var (
 	NULL  = object.Null{}
 )
 
-func Eval(node ast.Node) object.Object {
+func Eval(node ast.Node, env *environment.Environment) object.Object {
 	switch node := node.(type) {
 	case *ast.Program:
-		return evalStatements(node.Statements)
+		return evalStatements(node.Statements, env)
 	case *ast.IntegerLiteral:
 		return &object.Integer{Value: node.Value}
 	case *ast.BooleanLiteral:
@@ -23,26 +24,30 @@ func Eval(node ast.Node) object.Object {
 		}
 		return &FALSE
 	case *ast.PrefixExpression:
-		return evalPrefixExpression(*node)
+		return evalPrefixExpression(*node, env)
 	case *ast.InfixExpression:
-		return evalInfixExpression(*node)
+		return evalInfixExpression(*node, env)
+	case *ast.LetStatement:
+		return evalLetStatement(*node, env)
+	case *ast.Identifier:
+		return evalIdentifier(*node, env)
 	}
 
 	return nil
 }
 
-func evalStatements(statements []ast.Node) object.Object {
+func evalStatements(statements []ast.Node, env *environment.Environment) object.Object {
 	var obj object.Object
 
 	for _, stmt := range statements {
-		obj = Eval(stmt)
+		obj = Eval(stmt, env)
 	}
 
 	return obj
 }
 
-func evalPrefixExpression(node ast.PrefixExpression) object.Object {
-	obj := Eval(node.Value)
+func evalPrefixExpression(node ast.PrefixExpression, env *environment.Environment) object.Object {
+	obj := Eval(node.Value, env)
 
 	switch node.Prefix.Literal {
 	case "!":
@@ -60,9 +65,9 @@ func evalPrefixExpression(node ast.PrefixExpression) object.Object {
 	return nil
 }
 
-func evalInfixExpression(node ast.InfixExpression) object.Object {
-	left := Eval(node.Left)
-	right := Eval(node.Right)
+func evalInfixExpression(node ast.InfixExpression, env *environment.Environment) object.Object {
+	left := Eval(node.Left, env)
+	right := Eval(node.Right, env)
 
 	switch node.Operator.Literal {
 	case "+":
@@ -92,4 +97,20 @@ func evalInfixExpression(node ast.InfixExpression) object.Object {
 	}
 
 	return nil
+}
+
+func evalLetStatement(node ast.LetStatement, env *environment.Environment) object.Object {
+	value := Eval(node.Value, env)
+	env.Set(node.Ident, value)
+
+	return &object.Boolean{Value: true}
+}
+
+func evalIdentifier(node ast.Identifier, env *environment.Environment) object.Object {
+	res := env.Get(node.Name)
+	if res != nil {
+		return res
+	}
+
+	return &NULL
 }
