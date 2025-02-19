@@ -27,7 +27,6 @@ func (e *Environment) Get(name string) object.Object {
 	}
 
 	return nil
-
 }
 
 func (e *Environment) Extend(env *Environment) {

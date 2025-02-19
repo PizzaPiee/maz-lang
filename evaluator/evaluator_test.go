@@ -1,6 +1,7 @@
 package evaluator
 
 import (
+	"maz-lang/environment"
 	"maz-lang/lexer"
 	"maz-lang/object"
 	"maz-lang/parser"
@@ -28,7 +29,8 @@ func TestEvalIntegerLiteral(t *testing.T) {
 	for _, tt := range tests {
 		l := lexer.New(tt.Expression)
 		program := parser.New(&l).Parse(token.EOF)
-		obj := Eval(&program)
+		env := environment.New()
+		obj := Eval(&program, &env)
 
 		if !cmp.Equal(obj, tt.ExpectedObj) {
 			t.Errorf("expected object to be %+v, instead got %+v\n", tt.ExpectedObj, obj)
@@ -55,7 +57,8 @@ func TestEvalBooleanLiteral(t *testing.T) {
 		t.Logf("evaluating '%s'\n", tt.Expression)
 		l := lexer.New(tt.Expression)
 		program := parser.New(&l).Parse(token.EOF)
-		obj := Eval(&program)
+		env := environment.New()
+		obj := Eval(&program, &env)
 
 		if !cmp.Equal(obj, tt.ExpectedObj) {
 			t.Errorf("expected object to be %+v, instead got %+v\n", tt.ExpectedObj, obj)
@@ -86,7 +89,8 @@ func TestEvalPrefixExpression(t *testing.T) {
 		t.Logf("evaluating '%s'\n", tt.Expression)
 		l := lexer.New(tt.Expression)
 		program := parser.New(&l).Parse(token.EOF)
-		obj := Eval(&program)
+		env := environment.New()
+		obj := Eval(&program, &env)
 
 		if !cmp.Equal(obj, tt.ExpectedObj) {
 			t.Errorf("expected object to be %+v, instead got %+v\n", tt.ExpectedObj, obj)
@@ -114,10 +118,39 @@ func TestEvalExpression(t *testing.T) {
 	}
 
 	for _, tt := range tests {
+		t.Logf("evaluating '%s'\n", tt.Expression)
+		l := lexer.New(tt.Expression)
+		program := parser.New(&l).Parse(token.EOF)
+		env := environment.New()
+		obj := Eval(&program, &env)
+
+		if !cmp.Equal(obj, tt.ExpectedObj) {
+			t.Errorf("expected object to be %+v, instead got %+v\n", tt.ExpectedObj, obj)
+		}
+	}
+}
+
+func TestEvalLetStatement(t *testing.T) {
+	tests := []struct {
+		Expression  string
+		ExpectedObj object.Object
+	}{
+		{
+			Expression:  "let a = 10; a",
+			ExpectedObj: &object.Integer{Value: 10},
+		},
+		{
+			Expression:  "let a = !true; a",
+			ExpectedObj: &object.Boolean{Value: false},
+		},
+	}
+
+	for _, tt := range tests {
 		t.Logf("evaluating: '%s'\n", tt.Expression)
 		l := lexer.New(tt.Expression)
-		p := parser.New(&l).Parse(token.EOF)
-		obj := Eval(&p)
+		program := parser.New(&l).Parse(token.EOF)
+		env := environment.New()
+		obj := Eval(&program, &env)
 
 		if !cmp.Equal(obj, tt.ExpectedObj) {
 			t.Errorf("expected object to be %+v, instead got %+v\n", tt.ExpectedObj, obj)
