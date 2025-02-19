@@ -1,6 +1,7 @@
 package evaluator
 
 import (
+	"fmt"
 	"maz-lang/ast"
 	"maz-lang/environment"
 	"maz-lang/object"
@@ -33,6 +34,8 @@ func Eval(node ast.Node, env *environment.Environment) object.Object {
 		return evalLetStatement(*node, env)
 	case *ast.Identifier:
 		return evalIdentifier(*node, env)
+	case *ast.IfStatement:
+		return evalIfStatement(*node, env)
 	}
 
 	return nil
@@ -96,6 +99,31 @@ func evalInfixExpression(node ast.InfixExpression, env *environment.Environment)
 				Value: left.(*object.Integer).Value / right.(*object.Integer).Value,
 			}
 		}
+	case ">":
+		if (left.Type() == right.Type()) && left.Type() == object.INTEGER_OBJ {
+			return &object.Boolean{Value: left.(*object.Integer).Value > right.(*object.Integer).Value}
+		}
+	case ">=":
+		if (left.Type() == right.Type()) && left.Type() == object.INTEGER_OBJ {
+			return &object.Boolean{Value: left.(*object.Integer).Value >= right.(*object.Integer).Value}
+		}
+
+	case "<":
+		if (left.Type() == right.Type()) && left.Type() == object.INTEGER_OBJ {
+			return &object.Boolean{Value: left.(*object.Integer).Value < right.(*object.Integer).Value}
+		}
+	case "<=":
+		if (left.Type() == right.Type()) && left.Type() == object.INTEGER_OBJ {
+			return &object.Boolean{Value: left.(*object.Integer).Value <= right.(*object.Integer).Value}
+		}
+	case "==":
+		if (left.Type() == right.Type()) && left.Type() == object.INTEGER_OBJ {
+			return &object.Boolean{Value: left.(*object.Integer).Value == right.(*object.Integer).Value}
+		}
+	case "!=":
+		if (left.Type() == right.Type()) && left.Type() == object.INTEGER_OBJ {
+			return &object.Boolean{Value: left.(*object.Integer).Value != right.(*object.Integer).Value}
+		}
 	}
 
 	return nil
@@ -117,6 +145,43 @@ func evalIdentifier(node ast.Identifier, env *environment.Environment) object.Ob
 	return &NULL
 }
 
-// func evalIfStatement(node ast.IfStatement, env *environment.Environment) object.Object {
-// 	mainCondition := Eval(node.MainCondition, env)
-// }
+func evalIfStatement(node ast.IfStatement, env *environment.Environment) object.Object {
+	mainCondition := Eval(node.MainCondition, env)
+
+	switch mainCondition := mainCondition.(type) {
+	case *object.Boolean:
+		if mainCondition.Value {
+			return evalStatements(node.MainStatements, env)
+		}
+	default:
+		return &object.Error{Value: fmt.Errorf("expected boolean, instead got '%s'\n", mainCondition.Inspect())}
+	}
+
+	for _, elseIf := range node.ElseIfs {
+		res := evalElseIf(elseIf, env)
+		if res != nil {
+			return res
+		}
+	}
+
+	if len(node.ElseStatements) != 0 {
+		return evalStatements(node.ElseStatements, env)
+	}
+
+	return &NULL
+}
+
+func evalElseIf(node ast.ElseIf, env *environment.Environment) object.Object {
+	condition := Eval(node.Condition, env)
+
+	switch condition := condition.(type) {
+	case *object.Boolean:
+		if condition.Value {
+			return evalStatements(node.Statements, env)
+		}
+	default:
+		return &object.Error{Value: fmt.Errorf("expected boolean, instead got '%s'\n", condition.Inspect())}
+	}
+
+	return nil
+}
