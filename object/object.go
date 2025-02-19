@@ -8,6 +8,7 @@ const (
 	INTEGER_OBJ = "INT"
 	BOOLEAN_OBJ = "BOOL"
 	NULL_OBJ    = "NULL"
+	ERROR_OBJ   = "ERROR"
 )
 
 type Object interface {
@@ -33,3 +34,10 @@ type Boolean struct {
 
 func (b *Boolean) Type() ObjectType { return BOOLEAN_OBJ }
 func (b *Boolean) Inspect() string  { return fmt.Sprintf("%v", b.Value) }
+
+type Error struct {
+	Value error
+}
+
+func (e *Error) Type() ObjectType { return ERROR_OBJ }
+func (e *Error) Inspect() string  { return e.Value.Error() }

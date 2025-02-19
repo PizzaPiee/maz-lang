@@ -14,6 +14,8 @@ var (
 
 func Eval(node ast.Node, env *environment.Environment) object.Object {
 	switch node := node.(type) {
+	case *ast.SyntaxError:
+		return &object.Error{Value: node}
 	case *ast.Program:
 		return evalStatements(node.Statements, env)
 	case *ast.IntegerLiteral:
@@ -114,3 +116,7 @@ func evalIdentifier(node ast.Identifier, env *environment.Environment) object.Ob
 
 	return &NULL
 }
+
+// func evalIfStatement(node ast.IfStatement, env *environment.Environment) object.Object {
+// 	mainCondition := Eval(node.MainCondition, env)
+// }
