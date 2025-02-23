@@ -36,6 +36,8 @@ func Eval(node ast.Node, env *environment.Environment) object.Object {
 		return evalIdentifier(*node, env)
 	case *ast.IfStatement:
 		return evalIfStatement(*node, env)
+	case *ast.FunctionDefinition:
+		return evalFunctionDef(*node, env)
 	}
 
 	return nil
@@ -198,4 +200,15 @@ func evalElseIf(node ast.ElseIf, env *environment.Environment) object.Object {
 	}
 
 	return nil
+}
+
+func evalFunctionDef(node ast.FunctionDefinition, env *environment.Environment) object.Object {
+	if env.Get(node.Name) != nil {
+		return &object.Error{Value: fmt.Errorf("evaluation error: function with name '%s' already exists\n", node.Name)}
+	}
+
+	res := &object.FunctionDef{Fn: node}
+	env.Set(node.Name, res)
+
+	return res
 }

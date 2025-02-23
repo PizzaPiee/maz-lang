@@ -1,6 +1,9 @@
 package object
 
-import "fmt"
+import (
+	"fmt"
+	"maz-lang/ast"
+)
 
 type ObjectType string
 
@@ -9,6 +12,7 @@ const (
 	BOOLEAN_OBJ = "BOOL"
 	NULL_OBJ    = "NULL"
 	ERROR_OBJ   = "ERROR"
+	FUNCDEF_OBJ = "FUNCDEF"
 )
 
 type Object interface {
@@ -41,3 +45,10 @@ type Error struct {
 
 func (e *Error) Type() ObjectType { return ERROR_OBJ }
 func (e *Error) Inspect() string  { return e.Value.Error() }
+
+type FunctionDef struct {
+	Fn ast.FunctionDefinition
+}
+
+func (f *FunctionDef) Type() ObjectType { return FUNCDEF_OBJ }
+func (f *FunctionDef) Inspect() string  { return fmt.Sprintf("<fn %s>", f.Fn.Name) }
