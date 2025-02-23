@@ -1,15 +1,6 @@
-let num = 5;
-num + 10;
-let add = fn (a, b) {a+b;};
-
-fn sum(a, b) {
-	return a + b
-}
-
-fn isGreaterThan(a, b) {
-	if a > b {
-		return false
-	} 
-
-	return true
+if 4 > 2 {
+	let a = 5;
+	a
+} else {
+	let a = 10;
 }

@@ -151,21 +151,27 @@ func evalIfStatement(node ast.IfStatement, env *environment.Environment) object.
 	switch mainCondition := mainCondition.(type) {
 	case *object.Boolean:
 		if mainCondition.Value {
-			return evalStatements(node.MainStatements, env)
+			currentEnv := environment.New()
+			currentEnv.Extend(env)
+			return evalStatements(node.MainStatements, &currentEnv)
 		}
 	default:
 		return &object.Error{Value: fmt.Errorf("expected boolean, instead got '%s'\n", mainCondition.Inspect())}
 	}
 
 	for _, elseIf := range node.ElseIfs {
-		res := evalElseIf(elseIf, env)
+		currentEnv := environment.New()
+		currentEnv.Extend(env)
+		res := evalElseIf(elseIf, &currentEnv)
 		if res != nil {
 			return res
 		}
 	}
 
 	if len(node.ElseStatements) != 0 {
-		return evalStatements(node.ElseStatements, env)
+		currentEnv := environment.New()
+		currentEnv.Extend(env)
+		return evalStatements(node.ElseStatements, &currentEnv)
 	}
 
 	return &NULL
