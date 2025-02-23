@@ -98,7 +98,7 @@ func TestEvalPrefixExpression(t *testing.T) {
 	}
 }
 
-func TestEvalExpression(t *testing.T) {
+func TestEvalInfixExpression(t *testing.T) {
 	tests := []struct {
 		Expression  string
 		ExpectedObj object.Object
@@ -114,6 +114,94 @@ func TestEvalExpression(t *testing.T) {
 		{
 			Expression:  "((100+5)-(3*5))/5",
 			ExpectedObj: &object.Integer{Value: 18},
+		},
+		{
+			Expression:  "5 >= 5",
+			ExpectedObj: &object.Boolean{Value: true},
+		},
+		{
+			Expression:  "1 > 2",
+			ExpectedObj: &object.Boolean{Value: false},
+		},
+		{
+			Expression:  "10 == 10",
+			ExpectedObj: &object.Boolean{Value: true},
+		},
+		{
+			Expression:  "10 != 10",
+			ExpectedObj: &object.Boolean{Value: false},
+		},
+		{
+			Expression:  "10 < 20",
+			ExpectedObj: &object.Boolean{Value: true},
+		},
+		{
+			Expression:  "10 <= 10",
+			ExpectedObj: &object.Boolean{Value: true},
+		},
+		{
+			Expression:  "10 + 20 * 2",
+			ExpectedObj: &object.Integer{Value: 50},
+		},
+		{
+			Expression:  "(10 + 20) * 2",
+			ExpectedObj: &object.Integer{Value: 60},
+		},
+		{
+			Expression:  "10 / 2 + 5",
+			ExpectedObj: &object.Integer{Value: 10},
+		},
+		{
+			Expression:  "true == true",
+			ExpectedObj: &object.Boolean{Value: true},
+		},
+		{
+			Expression:  "true != false",
+			ExpectedObj: &object.Boolean{Value: true},
+		},
+		{
+			Expression:  "2 * (3 + 4) - 5",
+			ExpectedObj: &object.Integer{Value: 9},
+		},
+		{
+			Expression:  "2 * 3 + 4 * 5",
+			ExpectedObj: &object.Integer{Value: 26},
+		},
+		{
+			Expression:  "2 * (3 + 4 * 5)",
+			ExpectedObj: &object.Integer{Value: 46},
+		},
+		{
+			Expression:  "2 * 3 + 4 * 5 - 6 / 2",
+			ExpectedObj: &object.Integer{Value: 23},
+		},
+		{
+			Expression:  "2 * (3 + 4) - 6 / 2",
+			ExpectedObj: &object.Integer{Value: 11},
+		},
+		{
+			Expression:  "2 * 3 + 4 * (5 - 6) / 2",
+			ExpectedObj: &object.Integer{Value: 4},
+		},
+		{
+			Expression:  "2 * (3 + 4 * (5 - 6)) / 2",
+			ExpectedObj: &object.Integer{Value: -1},
+		},
+		{
+			Expression:  "2 * 3 + 4 * 5 - 6 / 2 + 10",
+			ExpectedObj: &object.Integer{Value: 33},
+		},
+		{
+			Expression:  "2 * (3 + 4) - 6 / 2 + 10",
+			ExpectedObj: &object.Integer{Value: 21},
+		},
+		{
+			Expression:  "2 * 3 + 4 * (5 - 6) / 2 + 10",
+			ExpectedObj: &object.Integer{Value: 14},
+		},
+		{
+			Expression:  "2 * (3 + 4 * (5 - 6)) / 2 + 10",
+			ExpectedObj: &object.Integer{Value: 9},
 		},
 	}
 
