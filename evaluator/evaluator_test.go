@@ -157,3 +157,39 @@ func TestEvalLetStatement(t *testing.T) {
 		}
 	}
 }
+
+func TestIfStatement(t *testing.T) {
+	tests := []struct {
+		Expression  string
+		ExpectedObj object.Object
+	}{
+		{
+			Expression:  "if 5 > 2 {10} else {20}",
+			ExpectedObj: &object.Integer{Value: 10},
+		},
+		{
+			Expression:  "let a = 5; let b = 7; if a > b {10} else {20}",
+			ExpectedObj: &object.Integer{Value: 20},
+		},
+		{
+			Expression:  "let a = true; let b = false; if a == b {10} else if a != b {20} else {30}",
+			ExpectedObj: &object.Integer{Value: 20},
+		},
+		{
+			Expression:  "if 1 > 2 {let a = 10;} else {let a = 20;} a",
+			ExpectedObj: &object.Null{},
+		},
+	}
+
+	for _, tt := range tests {
+		t.Logf("evaluating: '%s'\n", tt.Expression)
+		l := lexer.New(tt.Expression)
+		program := parser.New(&l).Parse(token.EOF)
+		env := environment.New()
+		obj := Eval(&program, &env)
+
+		if !cmp.Equal(obj, tt.ExpectedObj) {
+			t.Errorf("expected object to be %+v, instead got %+v\n", tt.ExpectedObj, obj)
+		}
+	}
+}
