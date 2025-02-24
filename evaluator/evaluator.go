@@ -94,6 +94,14 @@ func evalInfixExpression(node ast.InfixExpression, env *environment.Environment)
 	left := Eval(node.Left, env)
 	right := Eval(node.Right, env)
 
+	if left.Type() == object.RETURN_OBJ {
+		left = left.(*object.Return).Value
+	}
+
+	if right.Type() == object.RETURN_OBJ {
+		right = right.(*object.Return).Value
+	}
+
 	switch node.Operator.Literal {
 	case "+":
 		if (left.Type() == right.Type()) && left.Type() == object.INTEGER_OBJ {
@@ -101,6 +109,7 @@ func evalInfixExpression(node ast.InfixExpression, env *environment.Environment)
 				Value: left.(*object.Integer).Value + right.(*object.Integer).Value,
 			}
 		}
+
 	case "-":
 		if (left.Type() == right.Type()) && left.Type() == object.INTEGER_OBJ {
 			return &object.Integer{

@@ -91,6 +91,7 @@ func New(lexer *lexer.Lexer) *Parser {
 	p.registerInfixFn(token.LT, p.parseInfixExpression)
 	p.registerInfixFn(token.GTEQ, p.parseInfixExpression)
 	p.registerInfixFn(token.LTEQ, p.parseInfixExpression)
+	p.registerInfixFn(token.LPAREN, p.parseFunctionCall)
 
 	p.nextToken()
 	p.nextToken()
@@ -229,11 +230,11 @@ func (p *Parser) parseBooleanLiteral() ast.Node {
 // the identifier refers to the name of a function you are calling.
 func (p *Parser) parseIdentifier() ast.Node {
 	name := p.curToken.Literal
-	if p.peekTokenIs(token.LPAREN) {
-		p.nextToken()
-		args := p.parseArguments()
-		return &ast.FunctionCall{Name: name, Arguments: args}
-	}
+	// if p.peekTokenIs(token.LPAREN) {
+	// 	p.nextToken()
+	// 	args := p.parseArguments()
+	// 	return &ast.FunctionCall{Name: name, Arguments: args}
+	// }
 
 	return &ast.Identifier{Name: name}
 }
@@ -368,6 +369,16 @@ func (p *Parser) parseReturnStatement() ast.Node {
 	p.nextToken()
 
 	return &node
+}
+
+func (p *Parser) parseFunctionCall(left ast.Node, _ ...token.TokenType) ast.Node {
+	ident, ok := left.(*ast.Identifier)
+	if !ok {
+		return &ast.SyntaxError{Msg: ErrExpectedIdentifier, Token: p.curToken}
+	}
+
+	args := p.parseArguments()
+	return &ast.FunctionCall{Name: ident.Name, Arguments: args}
 }
 
 func (p *Parser) parseFunctionDefinition() ast.Node {

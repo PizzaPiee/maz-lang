@@ -179,6 +179,7 @@ type FunctionCall struct {
 func (fc *FunctionCall) String() string {
 	var out bytes.Buffer
 
+	out.WriteString("(")
 	if fc.Name != "" {
 		out.WriteString(fc.Name)
 	}
@@ -190,7 +191,7 @@ func (fc *FunctionCall) String() string {
 
 	out.WriteString("(")
 	out.WriteString(strings.Join(arguments, ","))
-	out.WriteString(")\n")
+	out.WriteString("))\n")
 
 	return out.String()
 }

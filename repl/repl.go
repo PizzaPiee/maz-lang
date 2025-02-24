@@ -3,8 +3,8 @@ package repl
 import (
 	"bufio"
 	"fmt"
-	"maz-lang/environment"
-	"maz-lang/evaluator"
+	// "maz-lang/environment"
+	// "maz-lang/evaluator"
 	"maz-lang/lexer"
 	"maz-lang/parser"
 	"maz-lang/token"
@@ -15,7 +15,7 @@ func Run() {
 	reader := bufio.NewReader(os.Stdin)
 
 	fmt.Println("Welcome to the Maz REPL!")
-	env := environment.New()
+	// env := environment.New()
 	for {
 		fmt.Print(">> ")
 		input, _ := reader.ReadString('\n')
@@ -23,8 +23,9 @@ func Run() {
 		l := lexer.New(input)
 		p := parser.New(&l)
 		program := p.Parse(token.EOF)
-		obj := evaluator.Eval(&program, &env)
-		fmt.Printf("%s\n", obj.Inspect())
+		// obj := evaluator.Eval(&program, &env)
+		fmt.Printf("%s\n", program.String())
+		// fmt.Printf("%s\n", obj.Inspect())
 	}
 }
 
