@@ -1,6 +1,9 @@
-if 4 > 2 {
-	let a = 5;
-	a
-} else {
-	let a = 10;
+fn isGreaterThan(a, b) {
+	if a > b {
+		return true;
+	} else {
+		return false;
+	}
 }
+
+isGreaterThan(2, 1)

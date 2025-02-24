@@ -18,7 +18,7 @@ func Eval(node ast.Node, env *environment.Environment) object.Object {
 	case *ast.SyntaxError:
 		return &object.Error{Value: node}
 	case *ast.Program:
-		return evalStatements(node.Statements, env)
+		return evalProgram(node.Statements, env)
 	case *ast.IntegerLiteral:
 		return &object.Integer{Value: node.Value}
 	case *ast.BooleanLiteral:
@@ -38,16 +38,34 @@ func Eval(node ast.Node, env *environment.Environment) object.Object {
 		return evalIfStatement(*node, env)
 	case *ast.FunctionDefinition:
 		return evalFunctionDef(*node, env)
+	case *ast.FunctionCall:
+		return evalFunctionCall(*node, env)
+	case *ast.ReturnStatement:
+		obj := Eval(node.Expression, env)
+		return &object.Return{Value: obj}
 	}
 
 	return nil
 }
 
-func evalStatements(statements []ast.Node, env *environment.Environment) object.Object {
+func evalProgram(statements []ast.Node, env *environment.Environment) object.Object {
 	var obj object.Object
 
 	for _, stmt := range statements {
 		obj = Eval(stmt, env)
+	}
+
+	return obj
+}
+
+func evalBlockStatement(statements []ast.Node, env *environment.Environment) object.Object {
+	var obj object.Object
+
+	for _, stmt := range statements {
+		obj = Eval(stmt, env)
+		if obj != nil && obj.Type() == object.RETURN_OBJ {
+			break
+		}
 	}
 
 	return obj
@@ -163,7 +181,7 @@ func evalIfStatement(node ast.IfStatement, env *environment.Environment) object.
 		if mainCondition.Value {
 			currentEnv := environment.New()
 			currentEnv.Extend(env)
-			return evalStatements(node.MainStatements, &currentEnv)
+			return evalBlockStatement(node.MainStatements, &currentEnv)
 		}
 	default:
 		return &object.Error{Value: fmt.Errorf("expected boolean, instead got '%s'\n", mainCondition.Inspect())}
@@ -181,7 +199,7 @@ func evalIfStatement(node ast.IfStatement, env *environment.Environment) object.
 	if len(node.ElseStatements) != 0 {
 		currentEnv := environment.New()
 		currentEnv.Extend(env)
-		return evalStatements(node.ElseStatements, &currentEnv)
+		return evalBlockStatement(node.ElseStatements, &currentEnv)
 	}
 
 	return &NULL
@@ -193,7 +211,7 @@ func evalElseIf(node ast.ElseIf, env *environment.Environment) object.Object {
 	switch condition := condition.(type) {
 	case *object.Boolean:
 		if condition.Value {
-			return evalStatements(node.Statements, env)
+			return evalBlockStatement(node.Statements, env)
 		}
 	default:
 		return &object.Error{Value: fmt.Errorf("expected boolean, instead got '%s'\n", condition.Inspect())}
@@ -211,4 +229,31 @@ func evalFunctionDef(node ast.FunctionDefinition, env *environment.Environment) 
 	env.Set(node.Name, res)
 
 	return res
+}
+
+func evalFunctionCall(node ast.FunctionCall, env *environment.Environment) object.Object {
+	fn, ok := env.Get(node.Name).(*object.FunctionDef)
+	if !ok {
+		return &object.Error{Value: fmt.Errorf("'%s' cannot be called, it is not a function\n", node.Name)}
+	}
+
+	if fn == nil {
+		return &object.Error{Value: fmt.Errorf("invalid function call: no function with name '%s'\n", node.Name)}
+	}
+
+	if len(node.Arguments) != len(fn.Fn.Parameters) {
+		return &object.Error{
+			Value: fmt.Errorf("expected %d arguments in function call, instead got %d\n", len(fn.Fn.Parameters), len(node.Arguments)),
+		}
+	}
+
+	currentEnv := environment.New()
+	currentEnv.Extend(env)
+	for i, node := range node.Arguments {
+		obj := Eval(node, &currentEnv)
+		ident := fn.Fn.Parameters[i].(*ast.Identifier)
+		currentEnv.Set(ident.Name, obj)
+	}
+
+	return evalBlockStatement(fn.Fn.Body, &currentEnv)
 }

@@ -13,6 +13,7 @@ const (
 	NULL_OBJ    = "NULL"
 	ERROR_OBJ   = "ERROR"
 	FUNCDEF_OBJ = "FUNCDEF"
+	RETURN_OBJ  = "RETURN"
 )
 
 type Object interface {
@@ -45,6 +46,13 @@ type Error struct {
 
 func (e *Error) Type() ObjectType { return ERROR_OBJ }
 func (e *Error) Inspect() string  { return e.Value.Error() }
+
+type Return struct {
+	Value Object
+}
+
+func (r *Return) Type() ObjectType { return RETURN_OBJ }
+func (r *Return) Inspect() string  { return r.Value.Inspect() }
 
 type FunctionDef struct {
 	Fn ast.FunctionDefinition
