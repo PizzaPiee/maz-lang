@@ -622,3 +622,53 @@ func TestParseArguments(t *testing.T) {
 		}
 	}
 }
+
+func TestParseFunctionCall(t *testing.T) {
+	tests := []struct {
+		Expression   string
+		ExpectedNode ast.Node
+	}{
+		{
+			Expression: "foo()",
+			ExpectedNode: &ast.FunctionCall{
+				Name:      "foo",
+				Arguments: []ast.Node{},
+			},
+		},
+		{
+			Expression: "foo(a, b)",
+			ExpectedNode: &ast.FunctionCall{
+				Name: "foo",
+				Arguments: []ast.Node{
+					&ast.Identifier{Name: "a"},
+					&ast.Identifier{Name: "b"},
+				},
+			},
+		},
+		{
+			Expression: "foo(1+2, 1)",
+			ExpectedNode: &ast.FunctionCall{
+				Name: "foo",
+				Arguments: []ast.Node{
+					&ast.InfixExpression{
+						Left:     &ast.IntegerLiteral{Value: 1},
+						Operator: token.Token{Type: token.PLUS, Literal: "+"},
+						Right:    &ast.IntegerLiteral{Value: 2},
+					},
+					&ast.IntegerLiteral{Value: 1},
+				},
+			},
+		},
+	}
+
+	for _, tt := range tests {
+		t.Logf("parsing: '%s'\n", tt.Expression)
+		l := lexer.New(tt.Expression)
+		p := New(&l)
+		program := p.Parse(token.EOF)
+
+		if !cmp.Equal(program.Statements[0], tt.ExpectedNode) {
+			t.Errorf("expected %s, instead got %s\n", tt.ExpectedNode, program.Statements[0])
+		}
+	}
+}
