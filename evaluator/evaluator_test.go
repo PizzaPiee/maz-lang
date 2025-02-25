@@ -281,3 +281,31 @@ func TestIfStatement(t *testing.T) {
 		}
 	}
 }
+
+func TestEvalFunction(t *testing.T) {
+	tests := []struct {
+		Expression  string
+		ExpectedObj object.Object
+	}{
+		{
+			Expression:  "fn sum(a, b) {return a + b;} sum(1,2)",
+			ExpectedObj: &object.Return{Value: &object.Integer{Value: 3}},
+		},
+		{
+			Expression:  "fn fib(n) { if n == 0 { return 0; } else if n == 1 { return 1; } else if n == 2 { return 1; } else { return fib(n-1) + fib(n-2); } } fib(19)",
+			ExpectedObj: &object.Return{Value: &object.Integer{Value: 4181}},
+		},
+	}
+
+	for _, tt := range tests {
+		t.Logf("evaluating: '%s'\n", tt.Expression)
+		l := lexer.New(tt.Expression)
+		program := parser.New(&l).Parse(token.EOF)
+		env := environment.New()
+		obj := Eval(&program, &env)
+
+		if !cmp.Equal(obj, tt.ExpectedObj) {
+			t.Errorf("expected object to be %+v, instead got %+v\n", tt.ExpectedObj, obj)
+		}
+	}
+}
