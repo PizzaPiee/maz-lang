@@ -543,8 +543,8 @@ func TestParseFunction(t *testing.T) {
 		{
 			Expression: "fn foo(a, b())",
 			ExpectedNode: &ast.SyntaxError{
-				Msg:   ErrInvalidFunctionParameters,
-				Token: token.Token{Type: token.RPAREN, Literal: ")"},
+				Msg:   ErrExpectedIdentifier,
+				Token: token.Token{Type: token.LPAREN, Literal: "("},
 			},
 		},
 	}
