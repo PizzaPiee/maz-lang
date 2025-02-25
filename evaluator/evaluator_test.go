@@ -1,6 +1,7 @@
 package evaluator
 
 import (
+	"fmt"
 	"maz-lang/environment"
 	"maz-lang/lexer"
 	"maz-lang/object"
@@ -272,6 +273,55 @@ func TestIfStatement(t *testing.T) {
 	for _, tt := range tests {
 		t.Logf("evaluating: '%s'\n", tt.Expression)
 		l := lexer.New(tt.Expression)
+		program := parser.New(&l).Parse(token.EOF)
+		env := environment.New()
+		obj := Eval(&program, &env)
+
+		if !cmp.Equal(obj, tt.ExpectedObj) {
+			t.Errorf("expected object to be %+v, instead got %+v\n", tt.ExpectedObj, obj)
+		}
+	}
+}
+
+func TestEvalReturnStatement(t *testing.T) {
+	input := `
+	fn foo(a, b) {
+		if a > b {
+			if a == 10 {return -1;}	
+			return -2;
+		}
+
+		if a < b {return -3;}
+
+		return -4;
+	}
+	`
+
+	tests := []struct {
+		Expression  string
+		ExpectedObj object.Object
+	}{
+		{
+			Expression:  "foo(1,1)",
+			ExpectedObj: &object.Return{Value: &object.Integer{Value: -4}},
+		},
+		{
+			Expression:  "foo(10, 1)",
+			ExpectedObj: &object.Return{Value: &object.Integer{Value: -1}},
+		},
+		{
+			Expression:  "foo(1, 10)",
+			ExpectedObj: &object.Return{Value: &object.Integer{Value: -3}},
+		},
+		{
+			Expression:  "foo(5, 1)",
+			ExpectedObj: &object.Return{Value: &object.Integer{Value: -2}},
+		},
+	}
+
+	for _, tt := range tests {
+		t.Logf("evaluating: '%s'\n", tt.Expression)
+		l := lexer.New(fmt.Sprintf("%s\n%s", input, tt.Expression))
 		program := parser.New(&l).Parse(token.EOF)
 		env := environment.New()
 		obj := Eval(&program, &env)
