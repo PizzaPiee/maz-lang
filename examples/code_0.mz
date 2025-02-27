@@ -1,6 +1,0 @@
-fn getSumFn() {
-	return fn sum(a, b) {return a + b;};
-}
-
-let sum = getSumFn();
-sum(1,2)
