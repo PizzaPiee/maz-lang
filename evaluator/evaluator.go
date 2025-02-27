@@ -168,6 +168,10 @@ func evalInfixExpression(node ast.InfixExpression, env *environment.Environment)
 
 func evalLetStatement(node ast.LetStatement, env *environment.Environment) object.Object {
 	value := Eval(node.Value, env)
+	if value.Type() == object.RETURN_OBJ {
+		value = value.(*object.Return).Value
+	}
+
 	env.Set(node.Ident, value)
 
 	return &object.Boolean{Value: true}
@@ -242,6 +246,7 @@ func evalFunctionDef(node ast.FunctionDefinition, env *environment.Environment) 
 
 func evalFunctionCall(node ast.FunctionCall, env *environment.Environment) object.Object {
 	fn, ok := env.Get(node.Name).(*object.FunctionDef)
+
 	if !ok {
 		return &object.Error{Value: fmt.Errorf("'%s' cannot be called, it is not a function\n", node.Name)}
 	}
