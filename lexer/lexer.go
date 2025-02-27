@@ -73,6 +73,9 @@ func (l *Lexer) NextToken() token.Token {
 		} else {
 			res = newToken(token.LT, string(l.char))
 		}
+	case '"':
+		str := l.readString()
+		res = newToken(token.STRING, str)
 	default:
 		// Check if it is a digit
 		if isDigit(l.char) {
@@ -121,6 +124,21 @@ func (l *Lexer) skipWhitespace() {
 	for l.char == ' ' || l.char == '\t' || l.char == '\n' || l.char == '\r' {
 		l.readChar()
 	}
+}
+
+func (l *Lexer) readString() string {
+	// if l.peekChar() == '"' {
+	// 	return ""
+	// }
+
+	start := l.readPos
+	for l.peekChar() != '"' {
+		l.readChar()
+	}
+	l.readChar()
+	end := l.pos
+
+	return l.Text[start:end]
 }
 
 func (l *Lexer) readNumber() string {

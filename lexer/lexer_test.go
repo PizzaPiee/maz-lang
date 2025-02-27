@@ -24,6 +24,9 @@ func TestNextToken(t *testing.T) {
 	2 >= 1
 	3 <= 1
 	true false
+	"foo"
+	"bar"
+	""
 	`
 
 	tests := []struct {
@@ -98,11 +101,15 @@ func TestNextToken(t *testing.T) {
 		{ExpectedType: token.INT, ExpectedLiteral: "1"},
 		{ExpectedType: token.TRUE, ExpectedLiteral: "true"},
 		{ExpectedType: token.FALSE, ExpectedLiteral: "false"},
+		{ExpectedType: token.STRING, ExpectedLiteral: "foo"},
+		{ExpectedType: token.STRING, ExpectedLiteral: "bar"},
+		{ExpectedType: token.STRING, ExpectedLiteral: ""},
 	}
 
 	l := New(input)
 
 	for i, tt := range tests {
+		t.Logf("lexer on char: %s\n", tt.ExpectedLiteral)
 		token := l.NextToken()
 
 		if token.Type != tt.ExpectedType {
