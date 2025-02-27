@@ -26,6 +26,8 @@ func Eval(node ast.Node, env *environment.Environment) object.Object {
 			return &TRUE
 		}
 		return &FALSE
+	case *ast.StringLiteral:
+		return &object.String{Value: node.Value}
 	case *ast.PrefixExpression:
 		return evalPrefixExpression(*node, env)
 	case *ast.InfixExpression:
@@ -107,6 +109,12 @@ func evalInfixExpression(node ast.InfixExpression, env *environment.Environment)
 		if (left.Type() == right.Type()) && left.Type() == object.INTEGER_OBJ {
 			return &object.Integer{
 				Value: left.(*object.Integer).Value + right.(*object.Integer).Value,
+			}
+		}
+
+		if (left.Type() == right.Type()) && left.Type() == object.STRING_OBJ {
+			return &object.String{
+				Value: left.(*object.String).Value + right.(*object.String).Value,
 			}
 		}
 
