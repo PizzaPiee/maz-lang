@@ -58,6 +58,12 @@ type BooleanLiteral struct {
 
 func (bl *BooleanLiteral) String() string { return fmt.Sprintf("%v\n", bl.Value) }
 
+type StringLiteral struct {
+	Value string
+}
+
+func (sl *StringLiteral) String() string { return fmt.Sprintf("%v\n", sl.Value) }
+
 type SyntaxError struct {
 	Msg   string
 	Token token.Token

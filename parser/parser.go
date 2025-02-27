@@ -74,6 +74,7 @@ func New(lexer *lexer.Lexer) *Parser {
 	p.registerPrefixFn(token.INT, p.parseIntegerLiteral)
 	p.registerPrefixFn(token.TRUE, p.parseBooleanLiteral)
 	p.registerPrefixFn(token.FALSE, p.parseBooleanLiteral)
+	p.registerPrefixFn(token.STRING, p.parseStringLiteral)
 	p.registerPrefixFn(token.LPAREN, p.parseParenExpression)
 	p.registerPrefixFn(token.LET, p.parseLetStatement)
 	p.registerPrefixFn(token.IDENT, p.parseIdentifier)
@@ -222,6 +223,10 @@ func (p *Parser) parseBooleanLiteral() ast.Node {
 		return &ast.BooleanLiteral{Value: true}
 	}
 	return &ast.BooleanLiteral{Value: false}
+}
+
+func (p *Parser) parseStringLiteral() ast.Node {
+	return &ast.StringLiteral{Value: p.curToken.Literal}
 }
 
 // This function does not simply parse an Identifier.

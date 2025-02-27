@@ -9,6 +9,33 @@ import (
 	"github.com/google/go-cmp/cmp"
 )
 
+func TestParseStringLiteral(t *testing.T) {
+	tests := []struct {
+		Expression   string
+		ExpectedNode ast.Node
+	}{
+		{
+			Expression:   "\"foo\"",
+			ExpectedNode: &ast.StringLiteral{Value: "foo"},
+		},
+		{
+			Expression:   "\"\"",
+			ExpectedNode: &ast.StringLiteral{Value: ""},
+		},
+	}
+
+	for _, tt := range tests {
+		t.Logf("parsing: '%s'\n", tt.Expression)
+		l := lexer.New(tt.Expression)
+		p := New(&l)
+		program := p.Parse(token.EOF)
+
+		if !cmp.Equal(program.Statements[0], tt.ExpectedNode) {
+			t.Errorf("expected %s, instead got %s\n", tt.ExpectedNode, program.Statements[0])
+		}
+	}
+}
+
 func TestParsePrefixExpression(t *testing.T) {
 	tests := []struct {
 		Expression   string
@@ -116,7 +143,6 @@ func TestParseExpression(t *testing.T) {
 			},
 		},
 		{
-
 			Expression: "((100+5)-(3*5))/5",
 			ExpectedNode: &ast.InfixExpression{
 				Left: &ast.InfixExpression{
