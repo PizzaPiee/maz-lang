@@ -161,6 +161,10 @@ func evalInfixExpression(node ast.InfixExpression, env *environment.Environment)
 		if (left.Type() == right.Type()) && left.Type() == object.BOOLEAN_OBJ {
 			return &object.Boolean{Value: left.(*object.Boolean).Value == right.(*object.Boolean).Value}
 		}
+
+		if (left.Type() == right.Type()) && left.Type() == object.STRING_OBJ {
+			return &object.Boolean{Value: left.(*object.String).Value == right.(*object.String).Value}
+		}
 	case "!=":
 		if (left.Type() == right.Type()) && left.Type() == object.INTEGER_OBJ {
 			return &object.Boolean{Value: left.(*object.Integer).Value != right.(*object.Integer).Value}
@@ -168,6 +172,10 @@ func evalInfixExpression(node ast.InfixExpression, env *environment.Environment)
 
 		if (left.Type() == right.Type()) && left.Type() == object.BOOLEAN_OBJ {
 			return &object.Boolean{Value: left.(*object.Boolean).Value != right.(*object.Boolean).Value}
+		}
+
+		if (left.Type() == right.Type()) && left.Type() == object.STRING_OBJ {
+			return &object.Boolean{Value: left.(*object.String).Value != right.(*object.String).Value}
 		}
 	}
 
