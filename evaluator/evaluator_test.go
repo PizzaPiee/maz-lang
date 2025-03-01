@@ -204,6 +204,10 @@ func TestEvalInfixExpression(t *testing.T) {
 			Expression:  "2 * (3 + 4 * (5 - 6)) / 2 + 10",
 			ExpectedObj: &object.Integer{Value: 9},
 		},
+		{
+			Expression:  "\"foo\" + \" \" + \"bar\"",
+			ExpectedObj: &object.String{Value: "foo bar"},
+		},
 	}
 
 	for _, tt := range tests {
@@ -344,6 +348,34 @@ func TestEvalFunction(t *testing.T) {
 		{
 			Expression:  "fn fib(n) { if n == 0 { return 0; } else if n == 1 { return 1; } else if n == 2 { return 1; } else { return fib(n-1) + fib(n-2); } } fib(19)",
 			ExpectedObj: &object.Return{Value: &object.Integer{Value: 4181}},
+		},
+	}
+
+	for _, tt := range tests {
+		t.Logf("evaluating: '%s'\n", tt.Expression)
+		l := lexer.New(tt.Expression)
+		program := parser.New(&l).Parse(token.EOF)
+		env := environment.New()
+		obj := Eval(&program, &env)
+
+		if !cmp.Equal(obj, tt.ExpectedObj) {
+			t.Errorf("expected object to be %+v, instead got %+v\n", tt.ExpectedObj, obj)
+		}
+	}
+}
+
+func TestEvalStringLiteteral(t *testing.T) {
+	tests := []struct {
+		Expression  string
+		ExpectedObj object.Object
+	}{
+		{
+			Expression:  "let a = \"foo\"; a",
+			ExpectedObj: &object.String{Value: "foo"},
+		},
+		{
+			Expression:  "let a = \"\"; a",
+			ExpectedObj: &object.String{Value: ""},
 		},
 	}
 

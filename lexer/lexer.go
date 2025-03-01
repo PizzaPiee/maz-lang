@@ -127,10 +127,6 @@ func (l *Lexer) skipWhitespace() {
 }
 
 func (l *Lexer) readString() string {
-	// if l.peekChar() == '"' {
-	// 	return ""
-	// }
-
 	start := l.readPos
 	for l.peekChar() != '"' {
 		l.readChar()
